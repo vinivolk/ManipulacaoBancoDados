@@ -1,0 +1,35 @@
+---
+title: "desafio1"
+author: "Vinicius-276008"
+format: html
+editor: visual
+---
+
+```{r}
+# Local do arquivo
+flights <- "../ME315/flights.csv"
+```
+
+```{r}
+# Tempo de importação do banco com o read.csv() da base do R
+Rbase_time <- system.time(dados <- read.csv(flights))
+print(Rbase_time)
+```
+
+```{r}
+# Tempo de importação do banco com o read_csv() do pacote readr
+library(readr)
+readr_time <- system.time(dados <- read_csv(flights))
+print(readr_time)
+```
+
+```{python}
+# Tempo de importação do banco com o read_csv() do pacote pandas (python)
+import time
+import pandas as pd
+
+start = time.time()
+data = pd.read_csv("../ME315/flights.csv.zip")
+end = time.time()
+print(end - start)
+```
