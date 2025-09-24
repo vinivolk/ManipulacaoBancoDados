@@ -1,0 +1,116 @@
+---
+title: "desafio6"
+format: html
+editor: visual
+---
+
+```{r}
+library(RSQLite)
+
+path <- '../ME315'
+fname <- file.path(path, 'disco.db')
+
+conn <- dbConnect(SQLite(), fname)
+```
+
+```{r}
+# Exercicios do slide
+
+# Contagem do total de clientes cadastrados
+sql <- 'SELECT COUNT(customerid) FROM customers'
+head(dbGetQuery(conn, sql))
+
+# Contagem do total de paises distintos
+sql2 <- 'SELECT  COUNT(DISTINCT country) FROM customers'
+head(dbGetQuery(conn, sql2))
+
+# Contagem de clientes por país
+sql3 <- 'SELECT country, COUNT(customerid) FROM customers GROUP BY country'
+head(dbGetQuery(conn, sql3))
+
+# 5 paises com mais clientes
+sql4 <- paste('SELECT country, COUNT(customerid) FROM customers GROUP BY country',
+              'ORDER BY COUNT(customerid) DESC LIMIT 5')
+head(dbGetQuery(conn, sql4))
+
+# Paises com 6 letras
+sql5 <- 'SELECT DISTINCT country FROM customers WHERE LENGTH(country) = 6'
+head(dbGetQuery(conn, sql5))
+
+# Musicas compradas por brasileiros
+
+sql6 <- paste('SELECT tracks.name FROM customers',
+              'JOIN invoices ON customers.customerid = invoices.customerid',
+              'JOIN invoice_items ON invoices.invoiceid = invoice_items.invoiceid',
+              'JOIN tracks ON invoice_items.trackid = tracks.trackid',
+              "WHERE customers.country = 'Brazil' GROUP BY tracks.name",
+              'ORDER BY tracks.name')
+head(dbGetQuery(conn, sql6))
+
+
+```
+
+```{r}
+# Desafios do classroom
+
+# Qual o álbum mais tocado por pais? 
+
+# Tabela com a contagem de compras de cada album por cada pais
+albums_count_query <- paste('SELECT albums.title, country, COUNT(*) as count FROM customers',
+                            # titulo do album, país dos usuarios, contagem futura
+                            'JOIN invoices ON customers.customerid = invoices.customerid',
+                            # adicionando a tabela de compras pelo id dos usuarios que realizaram as compras
+                            'JOIN invoice_items ON invoices.invoiceid = invoice_items.invoiceid',
+                            # adicionando a tabela das outras informacoes das compras atraves do id
+                            'JOIN tracks ON invoice_items.trackid = tracks.trackid',
+                            # adicionando a tabela de musicas atraves do id da musica contida na compra das musicas 
+                            'JOIN albums ON tracks.albumid = albums.albumid',
+                            # adicionando a tabela de albums atraves do id do album contido junto as musicas
+                            'GROUP BY albums.title, customers.country',
+                            # agrupando por titulo do album e país
+                            'ORDER BY country, count DESC')
+                            # ordenando por país e a contagem de albums
+
+# selecionando apenas a maior contagem em cada país
+album_count_bycountry_query <- paste('SELECT title as Album, country as Pais,
+                                     count as Vendas FROM (', albums_count_query, ')',
+                                     # mantendo as colunas necessarias
+                                     'GROUP BY country',
+                                     # Agrupando por país
+                                     'HAVING count = MAX(count)')
+                                     # em cada grupo (país) seleciona a linha de maior valor de contagem
+
+most_stremead_albums <- dbGetQuery(conn, album_count_bycountry_query)
+head(most_stremead_albums)
+
+# Qual o artista mais tocado por pais?
+
+total_artists_count <- paste('SELECT artists.name, country, COUNT(*) as count FROM customers',
+                             # nome do artista, país dos usuarios, contagem futura
+                             'JOIN invoices ON customers.customerid = invoices.customerid',
+                             # adicionando a tabela de compras pelo id dos usuarios que realizaram as compras
+                             'JOIN invoice_items ON invoices.invoiceid = invoice_items.invoiceid',
+                             # adicionando a tabela das outras informacoes das compras atraves do id
+                             'JOIN tracks ON invoice_items.trackid = tracks.trackid',
+                             # adicionando a tabela de musicas atraves do id da musica contida na compra das musicas 
+                             'JOIN albums ON tracks.albumid = albums.albumid',
+                             # adicionando a tabela de albums atraves do id do album contido junto as musicas
+                             'JOIN artists ON albums.artistid = artists.artistid',
+                             # adicionando a tabela de artistas pelo id do artista contido junto ao album
+                             'GROUP BY artists.name, customers.country',
+                             # agrupando por artista e pais dos usuarios que o ouvem
+                             'ORDER BY country, count DESC')
+                             # ordenando por país e a contagem de usuarios que ouvem cada artista
+
+# Selecionando o artista com mais contagem de compras por pais
+most_stremead_bycountry <- paste('SELECT name as Artista, country as Pais,
+                                 count as Vendas FROM (', total_artists_count, ')',
+                                 # Varivaeis de interesse
+                                 'GROUP BY country',
+                                 # AGrupando por pais
+                                 'HAVING count = MAX(count)')
+                                 # Selecionando o artista de maior numero de vendas em cada grupo (pais)
+
+most_stremead_artists <- dbGetQuery(conn, most_stremead_bycountry)
+head(most_stremead_artists)
+```
