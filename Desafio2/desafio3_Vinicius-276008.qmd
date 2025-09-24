@@ -1,0 +1,30 @@
+---
+title: "desafio3"
+author: "Vinicius-276008"
+format: html
+editor: visual
+---
+
+```{r, warning=FALSE, message=FALSE}
+# Pacote para importar parquet
+library(arrow)
+
+# Local do arquivo parquet
+parquet <- "../ME315/lectures.parquet"
+
+# Importacao do df
+df_parquet <- read_parquet(parquet)
+is.data.frame(df_parquet) # Verificacao
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Pacote para importar json
+library(jsonlite)
+
+# Local do arquivo json
+json <- "../ME315/drake_data.json"
+
+# Importacao do df
+df_json <- fromJSON(json)
+is.data.frame(df_json) # Verificacao
+```
