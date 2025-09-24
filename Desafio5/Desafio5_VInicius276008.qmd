@@ -1,0 +1,91 @@
+---
+title: "SQL"
+format: html
+editor: visual
+autor: 'Vinicius ra276008'
+---
+
+```{r, eval=FALSE}
+install.packages("RSQLite")
+```
+
+```{r}
+library(RSQLite)
+db = dbConnect(SQLite(), '../ME315/disco.db')
+db
+
+dbListTables(db)
+dbListFields(db, 'albums')
+```
+
+```{r}
+album_db <- dbGetQuery(db, 'SELECT * FROM albums')
+head(album_db)
+dim(album_db)
+```
+
+```{r}
+sql <- 'SELECT trackid, name, composer, unitprice FROM tracks ORDER BY unitprice'
+
+res <- dbGetQuery(db, sql)
+
+head(res)
+```
+
+```{r}
+sql_2 = 'SELECT DISTINCT city FROM customers ORDER BY city'
+res_2 = dbGetQuery(db, sql_2)
+head(res_2)
+```
+
+```{r}
+sql_3 <- 'SELECT name, albumid FROM tracks WHERE albumid=1'
+res_3 <- dbGetQuery(db, sql_3)
+head(res_3)
+```
+
+```{r}
+sql_4 <- paste('SELECT name, albumid, mediatypeid FROM tracks',
+        'WHERE mediatypeid IN (1, 2) ORDER BY name LIMIT 5')
+res_4 <- dbGetQuery(db, sql_4)
+res_4
+```
+
+```{r}
+sql_5 <- paste('SELECT name, trackid, albumid FROM tracks',
+               'WHERE albumid IN',
+               '(SELECT albumid FROM albums WHERE artistid==12)')
+res_5 <- dbGetQuery(db, sql_5)
+res_5
+```
+
+```{r}
+sql_6 <- "SELECT name FROM tracks WHERE name GLOB '?ere*'"
+res_6 <- dbGetQuery(db, sql_6)
+res_6
+```
+
+```{r}
+sql_7 <- "SELECT name FROM tracks WHERE name GLOB '*[0-9]*'"
+res_7 <- dbGetQuery(db, sql_7)
+head(res_7)
+```
+
+```{r}
+sql_8 <- 'SELECT albumid, COUNT(trackid) FROM tracks GROUP BY albumid'
+res_8 <- dbGetQuery(db, sql_8)
+head(res_8)
+```
+
+```{r}
+sql_9 <- 'SELECT albumid, COUNT(trackid) FROM tracks WHERE albumid==1'
+res_9 <- dbGetQuery(db, sql_9)
+res_9
+```
+
+```{r}
+sql_10 <- paste('SELECT tracks.name, albums.title FROM tracks',
+                'INNER JOIN albums ON albums.albumid = tracks.albumid')
+res_10 <- dbGetQuery(db, sql_10)
+head(res_10)
+```
