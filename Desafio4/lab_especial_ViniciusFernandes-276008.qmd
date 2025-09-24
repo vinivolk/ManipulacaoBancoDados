@@ -1,0 +1,93 @@
+---
+title: "Laboratorio especial"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(leaflet)
+```
+
+```{r}
+analisa_aeronave <- function(tail_number, archive){
+  # Criando a função para filtrar apenas a aeronave de interesse
+  # e eliminar NAs das variaveis de interesse
+  tailnumber_filter <- function(input, pos){
+    input %>%
+      filter(TAIL_NUMBER %in% tail_number) %>% # Filtrar a aeronave
+      filter(!is.na(MONTH), !is.na(DAY), !is.na(DEPARTURE_TIME)) # Remover NAs
+  }
+  plane_data <- read_csv_chunked(archive, chunk_size = 1e6,
+                                    callback = DataFrameCallback$new(tailnumber_filter),
+                                    col_types = cols()) # Importando os dados de 1 em 1 milhao
+                                                        # ja com a filtragem da funçao definida acima
+  
+  # Importação do dataframe com as localizacoes dos aeroportos 
+  # É necessario alterar o endereco do arquivo conforme seu computador no interior da função pois
+  # a função so indica a entrada do endereco do arquivo flights
+  airports_coordinates <- read_csv("../ME315/airports.csv",
+                                   col_types = cols_only(IATA_CODE = "c",  # aeroportos
+                                                         LATITUDE = "d",   # localizacao
+                                                         LONGITUDE = "d")) # localizacao
+  
+  plane_data <- plane_data %>%
+    mutate(
+      date = ymd(paste(2015, MONTH, DAY, sep = "-")), # criando uma coluna em formato de data
+      hour_formatted = paste0(substr(DEPARTURE_TIME, 1, 2), ":", 
+                             substr(DEPARTURE_TIME, 3, 4)), # formatando  as horas no formato
+                                                            # HHMM para HH:MM
+      datetime = ymd_hm(paste(date, hour_formatted)) # criando coluna em formato de hora completa com minutos
+    ) %>%
+    arrange(date, DEPARTURE_TIME) # ordenando por data e hora
+  
+  complete_table <- plane_data %>% # criando uma tabela relacionada com as localizacoes dos aeroportos
+    left_join(airports_coordinates, by = (c("DESTINATION_AIRPORT" = "IATA_CODE"))) %>%
+    filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
+    group_by(ORIGIN_AIRPORT, DESTINATION_AIRPORT) %>%
+    mutate(
+      avg_speed = mean(AIR_TIME / DISTANCE, na.rm = TRUE),
+      avg_delay = mean(ARRIVAL_DELAY, na.rm = TRUE) # Criando estatisticas para inserir no mapa
+    ) %>% ungroup()
+
+  complete_table <- complete_table %>% arrange(date, datetime) # garantindo ordem por tempo
+  
+  route_map <- leaflet(complete_table) %>% # criando o mapa visual da rota da aeronave
+    addTiles() %>%
+    addCircleMarkers( # Adicionando pontos dos aeroportos
+      lng = ~LONGITUDE,
+      lat = ~LATITUDE,
+      radius = 3,
+      color = "blue",
+      popup = ~paste("Date:", date, "<br>",
+                     "Hours:", hour_formatted, "<br>",
+                     "Airport", DESTINATION_AIRPORT, "<br>",
+                     "Fly", FLIGHT_NUMBER, "<br>",
+                     "Origin", ORIGIN_AIRPORT,
+                     "Avg Speed:", round(avg_speed, 2), "<br>",
+                     "Avg Delay:", round(avg_delay, 2), "min")
+    ) %>%
+    addPolylines( # Adicionando linhas da rota da aeronave
+      lng = ~LONGITUDE,
+      lat = ~LATITUDE,
+      color = "red",
+      weight = 2,
+      opacity = 0.7,
+    ) %>%
+    addLegend(
+      position = "topright",
+      colors = c("blue", "red"),
+      labels = c("Aeroportos", "Rota"),
+      opacity = 1
+    )
+  
+  return(list(dados = complete_table, map = route_map))
+}
+```
+
+```{r}
+N431WN_map <- analisa_aeronave("N431WN", "../ME315/flights.csv.zip")
+
+N431WN_map$dados
+N431WN_map$map
+```
