@@ -117,3 +117,8 @@ DisciplinarMaisFacil <- dbGetQuery(conn,
 
 sprintf("A disciplina mais dificil é %s, e a mais fácil é %s", DisciplinaMaisDificil$name, DisciplinarMaisFacil$name)
 ```
+
+```{r}
+dbDisconnect(conn)
+cat("Este relatório foi gerado em:", format(Sys.time(), "%d/%m/%Y %H:%M:%S"))
+```
