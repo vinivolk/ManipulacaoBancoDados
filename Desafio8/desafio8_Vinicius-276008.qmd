@@ -1,0 +1,119 @@
+---
+title: "desafio 8"
+author: "Vinicius-276008"
+format: html
+editor: visual
+---
+
+```{r}
+# Importacao do banco
+library(RSQLite)
+
+archive <- "../ME315/database.sqlite3"
+conn <- dbConnect(SQLite(), archive)
+
+```
+
+```{r}
+# Quem são e quantos são os professores que lecionaram disciplinas cujo tópico era estatística?
+
+stat_instructors_query <- paste('SELECT instructors.name, abbreviation FROM subjects',
+                               # Colunas de interesse final, os nomes dos professores e a abreviacao do assunto
+                                'JOIN subject_memberships ON subjects.code = subject_memberships.subject_code',
+                                'JOIN sections ON subject_memberships.course_offering_uuid = sections.course_offering_uuid',
+                                'JOIN teachings ON sections.uuid = teachings.section_uuid',
+                                'JOIN instructors ON teachings.instructor_id = instructors.id',
+                               # Todos os joins necessarios para, saindo de subjects (onde tem a abreviacao do assunto)
+                               # até instructors (onde tem o nome dos professores)
+                                "WHERE abbreviation = 'STAT'")
+                               # Filtrando apenas assunto de estatistica
+
+stat_instructors <- dbGetQuery(conn, stat_instructors_query)
+# Lista dos professores de estatistica
+
+sprintf("Lecionaram %d professores, os quais são:", length(unique(stat_instructors$name)))
+unique((stat_instructors$name))
+
+# QUal professor mais facil e qual mais dificil em estatistica?
+
+sql <- paste('SELECT instructors.name, abbreviation,',
+            # Variaveis de interesse final, nome dos professores e o assunto da materia (estatistica)
+                     'AVG(
+                       (4.0 * gd.a_count +
+                        3.5 * gd.ab_count +
+                        3.0 * gd.b_count +
+                        2.5 * gd.bc_count +
+                        2.0 * gd.c_count +
+                        1.0 * gd.d_count +
+                        0.0 * gd.f_count)
+                        / NULLIF((gd.a_count + gd.ab_count + gd.b_count +
+                                  gd.bc_count + gd.c_count + gd.d_count +
+                                  gd.f_count), 0)
+                     ) AS gpa_avg',
+             # Calculo da media ponderada do gpa's
+              'FROM subjects',
+              'JOIN subject_memberships sm ON subjects.code = sm.subject_code',
+              'JOIN course_offerings co ON sm.course_offering_uuid = co.uuid',
+              'JOIN grade_distributions gd ON co.uuid = gd.course_offering_uuid',
+              'JOIN sections s ON co.uuid = s.course_offering_uuid',
+              'JOIN teachings t ON s.uuid = t.section_uuid',
+              'JOIN instructors ON t.instructor_id = instructors.id',
+             # Todos os joins para ligar o nome dos professores até os gpa's
+              'WHERE subjects.abbreviation = "STAT"',
+             # Filtrando assunto de estatistica
+              'GROUP BY instructors.name') # Juntando por professor
+
+  
+ProfessorMaisDificil <- dbGetQuery(conn,
+  paste('SELECT * FROM (', sql, ') sub',
+        'WHERE gpa_avg IS NOT NULL', # Necessario se não o menor gpa é NA
+        'ORDER BY gpa_avg ASC LIMIT 1')
+) # Dentre a lista de professores e seu gpa medio, seleciona o com menor gpa
+
+ProfessorMaisFacil <- dbGetQuery(conn,
+  paste('SELECT * FROM (', sql, ') sub',
+        'ORDER BY gpa_avg DESC LIMIT 1')
+) # Dentre a lista de professores e seu gpa medio, seleciona o com maior gpa
+
+
+sprintf("O professor mais dificil é %s e o mais fácil é %s", ProfessorMaisDificil$name, ProfessorMaisFacil$name)
+
+# QUal disciplina mais facil e qual mais dificil
+
+sql2 <- paste('SELECT courses.name, subjects.abbreviation,
+                     AVG(
+                       (4.0 * gd.a_count +
+                        3.5 * gd.ab_count +
+                        3.0 * gd.b_count +
+                        2.5 * gd.bc_count +
+                        2.0 * gd.c_count +
+                        1.0 * gd.d_count +
+                        0.0 * gd.f_count)
+                        / NULLIF((gd.a_count + gd.ab_count + gd.b_count +
+                                  gd.bc_count + gd.c_count + gd.d_count +
+                                  gd.f_count), 0)
+                     ) AS gpa_avg',
+              'FROM subjects',
+              'JOIN subject_memberships sm ON subjects.code = sm.subject_code',
+              'JOIN course_offerings co ON sm.course_offering_uuid = co.uuid',
+              'JOIN courses ON co.course_uuid = courses.uuid',
+              'JOIN grade_distributions gd ON co.uuid = gd.course_offering_uuid',
+              'WHERE subjects.abbreviation = "STAT"',
+              'GROUP BY courses.name, subjects.abbreviation')
+# O codigo segue exatamente a mesma logica do anterior, só muda o caminho de joins que precisa
+# ser feito para chegar de subjets até a lista de gpa, mas dessa vez passando por courses pois
+# é onde tem a variaveis de interesse name, nome das disciplinas
+
+DisciplinaMaisDificil <- dbGetQuery(conn,
+                                    paste('SELECT * FROM (', sql2, ') sub',
+                                          'WHERE gpa_avg IS NOT NULL',
+                                          'ORDER BY gpa_avg ASC LIMIT 1')
+                                   )
+
+DisciplinarMaisFacil <- dbGetQuery(conn,
+                                  paste('SELECT * FROM (', sql2, ') sub',
+                                        'ORDER BY gpa_avg DESC LIMIT 1')
+                                )
+
+sprintf("A disciplina mais dificil é %s, e a mais fácil é %s", DisciplinaMaisDificil$name, DisciplinarMaisFacil$name)
+```
