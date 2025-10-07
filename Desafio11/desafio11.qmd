@@ -1,0 +1,150 @@
+---
+title: "desafio11"
+format: html
+editor: visual
+---
+
+```{python}
+import polars as pl
+```
+
+```{python}
+#Importação dos dados
+
+local = "./ME315/renda_adulta.csv.gz" # local do arquivo
+
+col_names = [
+    "age", "workclass", "fnlwgt", "education", "education-num",
+    "marital-status", "occupation", "relationship", "race", "sex",
+    "capital-gain", "capital-loss", "hours-per-week", "native-country", "income"
+] # nome das colunas
+
+col_types = {
+    "age": pl.Int64,
+    "workclass": pl.Categorical,
+    "fnlwgt": pl.Int64,
+    "education": pl.Categorical,
+    "education-num": pl.Int64,
+    "marital-status": pl.Categorical,
+    "occupation": pl.Categorical,
+    "relationship": pl.Categorical,
+    "race": pl.Categorical,
+    "sex": pl.Categorical,
+    "capital-gain": pl.Int64,
+    "capital-loss": pl.Int64,
+    "hours-per-week": pl.Int64,
+    "native-country": pl.Categorical,
+    "income": pl.Categorical
+} # tipo das colunas
+
+df = pl.read_csv( # importacao do df
+    local,
+    has_header=False, # sem cabeçalho
+    new_columns=col_names, # criando cabeçalho com os nomes
+    schema_overrides=col_types, # tipo das colunas
+    null_values="?" # ? sao dados nulos
+)
+```
+
+```{python}
+# tipo das colunas
+print(dict(zip(df.columns, df.dtypes)))
+
+# dimensoes da tabela
+print(df.shape)
+
+# Quantas pessoas recebem acima de $50.000 e quantas pessoas recebem abaixo deste limiar?
+
+# filtrando renda acima de 50k e abaixo de 50k e pegando o tamanho
+acima_50k = df.filter(pl.col("income") == ">50K").height
+menor_igual_50k = df.filter(pl.col("income") != ">50K").height
+
+print("%i pessoas recebem mais de $50.000 e %i recebem menos de $50.000"
+% (acima_50k, menor_igual_50k))
+```
+
+```{python}
+# criando o objeto renda longo
+renda_longo = df.unpivot(
+    index=[col for col in df.columns if col not in ["capital-gain", "capital-loss"]], # colunas que não serão transformadas
+    on=["capital-gain", "capital-loss"], # colunas para transformar
+    variable_name="tipo", # coluna dos tipos
+    value_name="valor" # coluna dos valores
+)
+
+renda_longo.select(["tipo", "valor"])
+```
+
+```{python}
+# Média de horas de trabalho por clase salarial
+
+media_horas = df.group_by("income").agg( # agrupando pela classe salarial
+                pl.col("hours-per-week").mean().alias("media_horas")
+    #criando uma coluna de media de horas com a media de horas por semana
+)
+
+media_horas
+```
+
+```{python}
+# Pessoas amostradas por profissão
+
+pessoas_por_profissao = df.group_by("occupation").agg( # agrupando por profissão
+                          pl.len().alias("qtde_pessoas")
+                          # contando qtde de pessoas em cada grupo
+)
+
+pessoas_por_profissao
+```
+
+```{python}
+# Gráfico de barras
+
+#!pip install matplotlib
+import matplotlib.pyplot as plt # importando o pacote para criação do grafico
+
+categorias = media_horas["income"].to_list() # lista do eixo x
+valores = media_horas["media_horas"].to_list() # lista do eixo y
+
+plt.figure(figsize=(6, 4)) # tamanho da imagem
+plt.bar(categorias, valores)
+# Grafico de barra onde a classe salarial é o eixo x e a media o eixo y
+plt.xlabel("Classe Salarial")
+plt.ylabel("Média de Horas por Semana")
+plt.title("Horas Trabalhadas por Semana por Nível Salarial")
+# titulos
+plt.tight_layout() # layout
+plt.show()# mostrar o grafico
+```
+
+```{python}
+# Discriminação salarial entre gêneros biológicos
+
+# Quantidade de pessoas por classe salarial e genero
+distribuicao_genero = df.group_by(["sex", "income"]).agg(
+  #agrupando por sexo e classe salarial
+    pl.len().alias("n_pessoas") # contando qtde por grupo
+).sort(["sex", "income"]) # ordenando por sexo e classe salarial
+
+# total por gênero
+totais = df.group_by("sex").agg(
+    pl.len().alias("total")
+)
+
+# cálculo da proporção
+
+distribuicao_com_total = distribuicao_genero.join(totais, on="sex")
+# juntando as tabelas de qtde de classe salarial por genero com a do total por genero
+distribuicao_com_total = distribuicao_com_total.with_columns(
+    (pl.col("n_pessoas") / pl.col("total") * 100).round(2).alias("porcentagem")
+    # calculando a proporção 
+)
+
+distribuicao_com_total
+
+print("A porcentagem de homens que recebem mais de 50k dentre os homens é 3x maior que a proporção de mulheres que recebem 50k dentre as mulheres. Sendo assim, existe uma clara discriminação salarial entre generos biologicos")
+```
+
+```{r}
+cat("Este relatorio foi geradoem:", format(Sys.time(), "%d/%m/%Y %H:%M:%S"))
+```
