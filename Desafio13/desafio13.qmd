@@ -1,0 +1,119 @@
+---
+title: "desafio13"
+author: "vinicius-ra276008"
+format: html
+editor: visual
+---
+
+```{python, eval = F}
+import polars as pl
+import sqlite3
+```
+
+```{python, eval=F}
+# Caminhos
+path_basics = "../ME315/title.basics0.tsv.gz"
+path_ratings = "../ME315/title.ratings.tsv.gz"
+path_principals = "../ME315/title.principals0.tsv.gz"
+```
+
+```{python, eval=F}
+# Leitura das tabelas definindo \N como null e lendo os 10000 primeiros para inferir o tipo mais rapido
+basics = pl.read_csv(path_basics, separator="\t", null_values=["\\N"], infer_schema_length=10000)
+ratings = pl.read_csv(path_ratings, separator="\t", null_values=["\\N"], infer_schema_length=10000)
+principals = pl.read_csv(path_principals, separator="\t", null_values=["\\N"], infer_schema_length=10000)
+```
+
+```{python, eval=F}
+# Criando a conexão sql
+conn = sqlite3.connect("../ME315/imdb.db")
+cursor = conn.cursor()
+```
+
+```{python, eval=F}
+# Funcao para criar as tabelas sql e inserir os dados polars de uma vez só
+def polars_to_sqlite(df: pl.DataFrame, table_name: str, conn: sqlite3.Connection):
+    cursor = conn.cursor()
+    # colunas com tipos sql equivalentes aos tipos Polars
+    cols = []
+    for name, dtype in df.schema.items():
+        if dtype in [pl.Int8, pl.Int16, pl.Int32, pl.Int64]:
+            sql_type = "INTEGER"
+        elif dtype in [pl.Float32, pl.Float64]:
+            sql_type = "REAL"
+        else:
+            sql_type = "TEXT"
+        cols.append(f"{name} {sql_type}")
+    # criar tabela
+    sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(cols)})"
+    cursor.execute(sql)
+    # inserir dados
+    data = df.to_numpy().tolist()
+    placeholders = ", ".join(["?"] * len(df.columns))
+    cursor.executemany(f"INSERT INTO {table_name} VALUES ({placeholders})", data)
+    conn.commit()
+```
+
+```{python, eval=F}
+# imputando os dados
+polars_to_sqlite(basics, "basics", conn)
+polars_to_sqlite(ratings, "ratings", conn)
+polars_to_sqlite(principals, "principals", conn)
+```
+
+```{r}
+library(RSQLite)
+
+db <- dbConnect(SQLite(), '../ME315/movies.sqlite3')
+
+#(Utilizando SQL, responda): Quais são os 5 filmes com as maiores notas (averageRating)? Apresente uma solução capaz de desempatar os filmes baseando-se no número de votos recebidos.
+
+query1 <- paste("SELECT b.primaryTitle AS titulo, r.averageRating AS nota, r.numVotes AS votos",
+                # colunas de interesse: titulo, nota e votos
+                "FROM ratings AS r JOIN basics AS b ON r.tconst = b.tconst",
+                # juntando as duas tabelas
+                "WHERE b.titleType = 'movie' ORDER BY r.averageRating DESC, r.numVotes DESC LIMIT 5") 
+                # selecionando apenas filmes, ordenando por nota depois votos e pegando os primeiros 5
+
+top5_filmes <- dbGetQuery(db, query1)
+top5_filmes
+```
+
+```{r}
+# (Utilizando SQL, responda): Qual é o gênero mais frequente entre os filmes com nota maior que 8?
+
+query2 <-  paste("SELECT b.genres AS genero, COUNT(*) AS frequencia FROM",
+                 # variaveis de interesse e contagem
+                 "basics AS b JOIN ratings AS r ON b.tconst = r.tconst",
+                 # juntando as tabelas
+                 "WHERE b.titleType = 'movie' AND r.averageRating > 8",
+                 # selecionando apenas filmes e com nota maior que 8
+                 "GROUP BY b.genres ORDER BY frequencia DESC LIMIT 1")
+                 # agrupando por genero e ordenando pela quantidade de vezes que aparece
+
+topgenero <- dbGetQuery(db, query2)
+topgenero
+```
+
+```{r}
+#(Utilizando SQL, responda): Quais são os 3 atores/atrizes que mais participaram de filmes com nota maior que 7.5?
+
+query3 <- paste("SELECT p.nconst AS ator, COUNT(*) AS qtde_filmes",
+                # variaveis de interesse e contagem
+                "FROM principals as p",
+                "JOIN ratings AS r ON p.tconst = r.tconst",
+                "JOIN basics AS b ON p.tconst = b.tconst",
+                # juntando as tabelas
+                "WHERE b.titleType = 'movie' AND r.averageRating > 7.5 AND",
+                "(p.category = 'actor' OR p.category = 'actress')", 
+                # selecionando só filmes com nota maior que 7.5 e apenas trabalho de ator
+                "GROUP BY ator",
+                "ORDER BY qtde_filmes DESC LIMIT 3")
+                # agrupando por atores, ordenando pela quantidade de filmes feitos
+top3_atores <- dbGetQuery(db, query3)
+top3_atores
+```
+
+```{r}
+dbDisconnect(db)
+```
