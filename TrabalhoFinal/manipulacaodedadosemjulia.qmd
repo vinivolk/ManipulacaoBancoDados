@@ -1,0 +1,786 @@
+---
+title: "Manipulação de banco de dados em Julia"
+autor: "Isabela Marciano, Matheus Pierri, Vinicius Fernandes, Wan Tai"
+format: revealjs
+editor: visual
+---
+
+## Manipulação de dados
+
+**O que é Manipulação de Dados?**
+
+É o processo de transformar dados brutos em um formato "arrumado": limpo, organizado e pronto para análise ou visualização.
+
+**As Ferramentas do Ecossistema:**
+
+-   **Julia:** O pilar é o `DataFrames.jl`. (ou o `DataFramesMeta.jl` para uma sintaxe mais "amigável", parecida com R).
+
+-   **R:** A referência é o `dplyr` (parte do Tidyverse).
+
+-   **Python:** A referência é o `pandas`
+
+------------------------------------------------------------------------
+
+Vamos ver a seguir 5 tópicos sobre a manipulação de dados utilizando um banco sobre dados de pacientes (pacients.csv) :
+
+### **1) Fundamentos e Limpeza do Banco em Julia:**
+
+Instalando os pacotes necessários
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+import Pkg
+Pkg.add(["DataFrames", "CSV", "Statistics"])
+```
+
+------------------------------------------------------------------------
+
+Primeiro, vamos carregar as bibliotecas que acabamos de instalar. Em seguida, vamos usar a função \`CSV.read\` para carregar nosso arquivo \`patients_with_NA_dirty.csv\` para um \`DataFrame\`. Finalmente, usaremos \`first\` para "espiar" as 10 primeiras linhas e fazer um diagnóstico visual dos problemas.
+
+------------------------------------------------------------------------
+
+```{julia}
+#| eval: true
+#| echo: true
+#| results: hide
+# 1. Carregar as bibliotecas
+using DataFrames, CSV, Statistics
+
+# 2. Ler o arquivo CSV para um DataFrame
+df_pacientes = CSV.read("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/patients_with_NA_dirty.csv", DataFrame)
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+first(df_pacientes, 10)
+```
+
+------------------------------------------------------------------------
+
+Com base na saída do código, aqui estão os 3 problemas principais que identificamos:
+
+-   **Problema 1: Dados Sensíveis (Privacidade)**
+
+    A coluna name contém nomes completos de pacientes, que são Dados Pessoais Identificáveis (PII) e devem ser removidos por privacidade.
+
+------------------------------------------------------------------------
+
+-   **Problema 2: Dados Não-Padronizados (Inconsistência)**
+
+    A coluna service possui dados inconsistentes. A amostra mostra surgery (minúsculo) e ICU (maiúsculo), o que quebraria filtros e agrupamentos.
+
+-   **Problema 3: Dados Faltantes (Nulos)**
+
+    A amostra mostra missing nas colunas arrival_date (linha 10) e departure_date (linha 9). Esses valores nulos precisam ser tratados.
+
+Vamos Resolver cada um deles:
+
+------------------------------------------------------------------------
+
+1.  **Seleção de Colunas :** Usamos isso para focar a análise apenas no que importa ou para remover dados sensíveis (Problema 1: `name`).
+
+    **Função Principal (Julia):** `select()` **Funções Auxiliares (Julia):** `Not()` (para excluir), `Between()` (para selecionar um intervalo), `All()` (para selecionar tudo).
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Criamos 'df_limpo' selecionando tudo, MENOS (Not) a coluna :name
+df_limpo = select(df_pacientes, Not(:name))
+
+# Vamos verificar as colunas do novo DataFrame
+println("--- Colunas após remover 'name' ---")
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+names(df_limpo)
+```
+
+------------------------------------------------------------------------
+
+2.  **Padronização de Dados:** Usamos isso para corrigir dados inconsistentes (Problema 2: `ICU` vs `surgery`). Se não padronizarmos, nossos filtros e agrupamentos falharão.
+
+    **Função Principal (Julia):** `transform()` (Usada para modificar uma coluna). **Funções Auxiliares (Julia):** `ByRow()` (Para aplicar uma função em cada linha) e `lowercase()` (A função específica que usaremos para converter para minúsculas).
+
+------------------------------------------------------------------------
+
+```{julia}
+#| eval: true
+#| echo: true
+# 1. Mostrar os valores únicos ANTES da limpeza
+println("Valores únicos ANTES: ", unique(df_limpo.service))
+
+# 2. Aplicar a transformação: :service => ByRow(lowercase) => :service
+df_limpo = transform(df_limpo, :service => ByRow(lowercase) => :service)
+```
+
+------------------------------------------------------------------------
+
+```{julia}
+#| eval: true
+#| echo: true
+# 3. Mostrar os valores únicos DEPOIS da limpeza
+println("Valores únicos DEPOIS: ", unique(df_limpo.service))
+```
+
+
+------------------------------------------------------------------------
+
+3.  **Filtragem de Linhas:** É o ato de escolher (manter) linhas que atendem a uma condição lógica. Agora que padronizamos nossos dados, podemos filtrar com segurança. **Função Principal (Julia):** `filter()` **Sintaxe (Julia):** Usamos `filter(:coluna => ==(valor), df)` para filtros simples, ou `filter(row -> row.condicao, df)` para filtros mais complexos.
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Agora o filtro por "icu" (minúsculo) funciona para todos os casos
+filtro_correto = filter(:service => ==("icu"), df_limpo)
+
+println("Total de pacientes encontrados em 'icu': ", nrow(filtro_correto))
+println("\nAmostra dos pacientes filtrados:")
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+first(filtro_correto, 3)
+```
+
+------------------------------------------------------------------------
+
+4.  **Tratamento de Dados Faltantes:** Aqui corrigimos o Problema 3 (os valores `missing`). Não podemos fazer cálculos com nulos. Temos duas estratégias: **1. Nulos Críticos:** Se o dado é essencial (como `arrival_date`), removemos a linha inteira. **Função (Julia):** `dropmissing()` **2. Nulos Não-Críticos:** Se o dado é opcional (como `satisfaction`), preenchemos o buraco. **Função (Julia):** `coalesce()` (Substitui o `missing` por um valor padrão, como a mediana).
+
+------------------------------------------------------------------------
+
+```{julia}
+#| eval: true
+#| echo: true
+# --- 1. Nulos Críticos (dropmissing) ---
+println("Total de linhas ANTES de 'dropmissing': ", nrow(df_limpo))
+
+# Removemos linhas onde a coluna :arrival_date é 'missing'
+dropmissing!(df_limpo, :arrival_date)
+
+println("Total de linhas DEPOIS de 'dropmissing': ", nrow(df_limpo))
+```
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# --- 2. Nulos Não-Críticos (coalesce) ---
+#Preenchendo 'satisfaction'
+
+# Calcular a mediana da satisfação (ignorando os nulos restantes)
+mediana_satisf = median(skipmissing(df_limpo.satisfaction))
+
+# Preencher os 'missing' com a mediana
+df_limpo = transform(df_limpo, 
+    :satisfaction => (x -> coalesce.(x, mediana_satisf)) => :satisfaction
+)
+
+```
+
+------------------------------------------------------------------------
+
+```{julia}
+#| eval: true
+#| echo: true
+# 3. Prova: Verificar 'nmissing' em 'satisfaction' e 'arrival_date'
+println("\nVerificação de Nulos após limpeza total:")
+describe(df_limpo, :nmissing) # Deve mostrar 0 nmissing para ambos
+```
+
+------------------------------------------------------------------------
+
+Pronto! Nosso \`df_limpo\` está completo. Removemos dados sensíveis, padronizamos o texto e tratamos todos os \`missing\`. Vamos rodar \`describe\` pela última vez para \*provar\* que o DataFrame está limpo (veja como \`nmissing\` será 0 onde limpamos) e pronto para a próxima etapa da análise.
+
+------------------------------------------------------------------------
+
+```{julia}
+#| eval: true
+#| echo: true
+println("--- DataFrame Final Limpo ---")
+first(df_limpo, 5)
+
+# Prova Final (describe)
+# 'describe' agora mostra 0 nmissing em arrival_date e satisfaction
+describe(df_limpo)
+```
+
+------------------------------------------------------------------------
+
+Esta saída é a prova de que nossa limpeza funcionou. A primeira tabela (`first`) mostra que o `df_limpo` não tem mais a coluna `name` e que a coluna `service` está padronizada (ex: "surgery", "icu" em minúsculas). A segunda tabela (`describe`) é a prova final: ela agora consegue calcular estatísticas (como `mean` e `median`) para a coluna `satisfaction`. Isso só é possível porque os valores `missing` foram preenchidos com sucesso pela mediana (repare que a mediana da coluna agora é `80.0`). O `describe` também confirma que tratamos os `missing` de `arrival_date` (que foi limpa pelo `dropmissing`), tornando nosso `df_limpo` pronto para a próxima fase da análise.
+
+------------------------------------------------------------------------
+
+## Julia vs. R vs. Python
+
+Como vimos, os conceitos de limpeza são universais. O que muda é a "ferramenta" (a função). Aqui está uma comparação objetiva das funções que usamos em Julia com seus equivalentes mais comuns em R (pacotes `dplyr`/`tidyr`) e Python (`pandas`).
+
+------------------------------------------------------------------------
+
+### 1. Seleção de Colunas (Remover `name`)
+
+-   Julia (DataFrames.jl): select(df, Not(:name))
+
+-   R (dplyr): select(df, -name)
+
+-   Python (pandas): df.drop(columns=\['name'\])
+
+**Observação:** A sintaxe do Julia e do R (`dplyr`) é muito semelhante para seleção.
+
+------------------------------------------------------------------------
+
+### 2. Padronização (Minúsculas em `service`)
+
+-   Julia (DataFrames.jl): transform(df, :service =\> ByRow(lowercase) =\> :service)
+
+-   R (dplyr): mutate(df, service = tolower(service))
+
+-   Python (pandas): df\['service'\] = df\['service'\].str.lower()
+
+**Observação:** Todas as linguagens têm uma função de "transformar/mutar" colunas. O R (`mutate`) e o Python (acesso `.str`) são um pouco mais diretos para esta operação específica.
+
+------------------------------------------------------------------------
+
+### 3. Filtragem de Linhas (Selecionar `icu`)
+
+-   Julia (DataFrames.jl): filter(:service =\> ==("icu"), df)
+
+-   R (dplyr): filter(df, service == "icu")
+
+-   Python (pandas): df\[ df\['service'\] == "icu" \]
+
+**Observação:** R (`dplyr`) é frequentemente considerado o mais "limpo" para filtros. Julia é muito claro. Python (`pandas`) usa uma sintaxe de "máscara booleana" (indexação com colchetes) que pode ser confusa para iniciantes.
+
+------------------------------------------------------------------------
+
+### 4. Remover Nulos (Linhas `dropmissing`)
+
+-   Julia (DataFrames.jl): dropmissing(df, :arrival_date)
+
+-   R (tidyr): drop_na(df, arrival_date)
+
+-   Python (pandas): df.dropna(subset=\['arrival_date'\])
+
+**Observação:** As três funções são quase idênticas no nome e na lógica.
+
+------------------------------------------------------------------------
+
+### 5. Preencher Nulos (`coalesce`)
+
+-   Julia (DataFrames.jl): transform(df, :satisfaction =\> (x -\> coalesce.(x, mediana)) =\> :satisfaction)
+
+-   R (tidyr): replace_na(df, list(satisfaction = mediana))
+
+-   Python (pandas): df\['satisfaction'\] = df\['satisfaction'\].fillna(mediana)
+
+**Observação:** A função `coalesce` do Julia é muito poderosa (pega o primeiro valor não nulo de vários argumentos). Em R, usamos `replace_na` (do `tidyr`), e em Python, o método `.fillna()`.\
+\
+
+------------------------------------------------------------------------
+
+## 2) Transformação Criação de colunas
+
+Podemos criar colunas usando (banco.coluna) no meu caso usarei o banco `patients` e vou adicionar uma nova coluna chamada `satisfaction_category` para ser uma medida de satisfação mais facil e menos poluido para ler, maior ou igual a 80 é **High**, maior ou igual a 50 é **Medium**, o resto seria **Low.**
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Importando os bancos que serão usados nas manipulações
+
+df_pacientes = CSV.read("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/patients.csv", DataFrame)
+
+df_funcionarios = CSV.read("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv", DataFrame)
+```
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+df_pacientes.satisfaction_category = [
+    if s >= 80
+        "High"
+    elseif s >= 50
+        "Medium"
+    else
+        "Low"
+    end
+    for s in df_pacientes.satisfaction
+]
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+select(
+    df_pacientes,
+    [:patient_id, :name, :satisfaction, :satisfaction_category]
+) |> df -> first(df, 5)
+```
+
+------------------------------------------------------------------------
+
+## Renomear colunas(rename ou rename!)
+
+Vamos renomear a coluna `present` do banco `staff_schedule`, para `attendance` usando a função `rename!`.
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Renomear
+rename!(df_funcionarios, :present => :attendance);
+
+# Substituir valores
+df_funcionarios.attendance = replace(df_funcionarios.attendance,
+    1 => "present",
+    0 => "absent"
+);
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+println(first(df_funcionarios, 5))
+```
+
+------------------------------------------------------------------------
+
+## Reordenar colunas(sort ou sort!)
+
+E para finalizar vamos reordenar a coluna `attendance` que acabamos de criar para mostrar os médicos presentes `(present)` primeiro e os não presentes `(absent)` depois para cada semana usando a função `sort` ou `sort!`.
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+sorted = sort(df_funcionarios, [:week, :attendance])
+select(first(sorted, 30), [:week, :staff_name, :role, :service, :attendance])
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+select(first(sorted, 30), [:week, :staff_name, :role, :attendance])
+```
+
+------------------------------------------------------------------------
+
+## Julia vs. R vs. Python
+
+Quando comparamos **Julia**, **R** e **Python** na hora de modificar linhas e colunas de um banco de dados, a principal diferença está no estilo de trabalho. Em **Julia**, as transformações são muito diretas: você acessa a coluna, aplica uma função e já vê o resultado, tudo com sintaxe clara e boa velocidade. Em **R**, especialmente com o `tidyverse`, o processo é o mais intuitivo possível — comandos como `mutate`, `filter` e `select` fazem a manipulação parecer quase uma frase, o que ajuda bastante no fluxo de análise.
+
+------------------------------------------------------------------------
+
+Já em **Python**, usando `pandas`, as alterações também são simples, como `df['nova'] = ...` ou `df.loc[...]`, mas a sintaxe costuma ser um pouco mais detalhada. Em resumo: **Julia** é enxuto e rápido, **R** é o mais natural de ler, e **Python** oferece versatilidade e é amplamente usado em outras áreas.
+
+------------------------------------------------------------------------
+
+## 3) Agregação
+
+Agregação consiste em resumir informações do conjunto de dados, como por exemplo, soma, média, mínimo/máximo contagem estatísticas por grupo. É outro processo extremamente essencial para análises exploratórias e modelagem.
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Importando os bancos que serão usados nas manipulações
+
+df_pacientes = CSV.read("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/patients.csv", DataFrame)
+```
+
+------------------------------------------------------------------------
+
+\
+**1.** **Conceito de Agrupamento: `groupby`**
+
+A fundação de qualquer análise comparativa é a capacidade de segmentar o todo em partes lógicas. No nosso contexto hospitalar, analisar a média geral de satisfação de todos os pacientes (média global) pode esconder problemas graves em departamentos específicos. É necessário "quebrar" os dados por setor.\
+Em Julia, a função `groupby` não realiza cálculos imediatos; ela cria uma estrutura indexada eficiente que mapeia as linhas aos seus respectivos grupos.
+
+------------------------------------------------------------------------
+
+Vamos segmentar nossa base de dados pelo tipo de serviço prestado (`service`), pois esperamos que o perfil de um paciente na UTI (`ICU`) seja distinto de um paciente em cirurgia (`surgery`).
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+using DataFrames, Statistics, Dates
+
+# Supondo que o CSV já foi carregado em 'df_pacients'
+# Criação do objeto agrupado por Serviço
+gd_service = groupby(df_pacientes, :service)
+
+# Verificação da estrutura
+```
+
+```{julia}
+#| eval: true
+#| echo: true
+println("Grupos formados: ", keys(gd_service))
+```
+
+------------------------------------------------------------------------
+
+Ao executar este comando, geramos um `GroupedDataFrame`. Diferente de outras linguagens que podem criar cópias dos dados na memória, o Julia mantém referências (ponteiros) para as linhas originais. Isso torna o processo extremamente veloz, mesmo se tivermos milhões de pacientes. Este objeto `gd_service` é o ponto de partida para as próximas etapas.\
+\
+
+------------------------------------------------------------------------
+
+**2.** **Sumarização: `combine`**
+
+Uma vez que os dados estão divididos logicamente, aplicamos a etapa de Summarization (ou Redução). O comando `combine` pega as múltiplas linhas de cada grupo e as "colapsa" em uma única linha de resumo.
+
+Análise de Performance por Departamento: Neste exemplo, queremos responder: "Qual serviço tem a melhor avaliação média?" e "Qual é a faixa etária típica de cada setor?".
+
+------------------------------------------------------------------------
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Calculando métricas agregadas por serviço
+kpis_servicos = combine(gd_service,
+    :satisfaction => mean => :media_satisfacao,
+    :age => median => :mediana_idade,
+    nrow => :total_atendimentos
+)
+
+# Ordenando para identificar os serviços com menor satisfação
+sort!(kpis_servicos, :media_satisfacao)
+display(kpis_servicos)
+```
+
+---
+
+Observe a sintaxe concisa: `:coluna_origem => função => :coluna_destino`.
+
+1.  Calculamos a média da coluna `satisfaction`.
+
+2.  Calculamos a mediana da coluna `age` (a mediana é mais robusta que a média para idade, pois é menos afetada por valores extremos).
+
+3.  Contamos o número de linhas (`nrow`) para saber o volume de atendimentos.
+
+O resultado é uma tabela enxuta onde cada linha é um serviço (ICU, surgery, etc.), permitindo uma comparação direta de performance entre departamentos.\
+\
+**\
+
+---
+
+3. Transformação Contextual: `transform`**
+
+Enquanto o `combine` reduz os dados, o `transform` mantém a granularidade original (o número de linhas não muda). O objetivo aqui é enriquecer a tabela original com dados calculados *dentro do contexto do grupo*. Isso é fundamental para responder perguntas relativas, como: "Este paciente está mais satisfeito do que a média *do departamento dele*?".\
+Normalização da Satisfação (Centralização): Um índice de satisfação 80 pode ser ótimo na Emergência (onde o estresse é alto), mas medíocre na Medicina Geral. Para comparar justamente, calculamos o desvio de cada paciente em relação à média do seu setor.
+
+---
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Adicionando uma coluna de Desvio Relativo
+df_analise = transform(gd_service,
+    :satisfaction => (x -> x .- mean(x)) => :desvio_da_media
+)
+
+# Visualizando um recorte dos dados
+select(df_analise, :service, :satisfaction, :desvio_da_media)
+```
+
+---
+
+A função anônima `x -> x .- mean(x)` opera sobre o vetor de satisfação de *cada grupo isoladamente*.
+
+-   Se o paciente A (Cirurgia) tem nota 85 e a média da Cirurgia é 80, seu desvio é +5.
+
+-   Se o paciente B (UTI) tem nota 85 e a média da UTI é 90, seu desvio é -5.
+
+Embora ambos tenham nota 85, o Paciente A teve uma experiência "acima da média" e o B "abaixo". O `transform` nos permite ver essa nuance sem perder os dados individuais do paciente.\
+\
+
+---
+
+Portanto, concluindo, a manipulação de dados com `DataFrames.jl` oferece um fluxo de trabalho claro e estatisticamente robusto. O método `groupby` organiza o caos inicial; o `combine` gera os indicadores chave de performance (KPIs) para a gestão; e o `transform` refina a análise, permitindo entender o indivíduo dentro do seu contexto coletivo. Ao aplicar essas técnicas na base `patients`, transformamos dados brutos administrativos em conhecimento estratégico sobre a qualidade e eficiência hospitalar.\
+\
+
+---
+
+## Julia vs. R vs. Python
+
+As três linguagens aplicam o paradigma *Split-Apply-Combine*, mas com filosofias distintas. O R (dplyr) possui uma abordagem Funcional com verbos de ação encadeados (`%>%`). O Python (Pandas) adota uma abordagem Orientada a Objetos com métodos encadeados (`.`) em objetos de classe. Já Julia (DataFrames.jl) utiliza *Multiple Dispatch*, focando em performance pura e sintaxe consistente de pares (`:coluna => função`), operando frequentemente sobre 'Views' (visualizações) sem cópia de memória.
+
+---
+
+Em agrupamento (group by), a diferença reside na visibilidade e alocação. O Python cria um objeto "Lazy" (preguiçoso); o `df.groupby()` retorna um objeto opaco (`DataFrameGroupBy`) que aguarda instrução e não é visualizável diretamente. O R adiciona metadados; o `group_by()` retorna a mesma tabela visualizável, apenas com uma "etiqueta" interna de grupo. Já Julia adota um meio-termo otimizado: o `groupby()` cria um `GroupedDataFrame`, que não copia os dados (é uma *view* eficiente), mas é um objeto distinto e iterável, permitindo inspeção direta sem a opacidade do Python nem a ambiguidade visual do R.
+
+---
+
+Em sumarização (Summarize), a principal diferença consiste em gestão de índices e estrutura. Python (`.agg`) exige dicionários/tuplas e transforma a coluna de agrupamento em índice (*Index*), frequentemente exigindo um `.reset_index()` para voltar a ser tabela plana. Em R (`summarise`), a sintaxe é direta (`media = mean(x)`), retornando automaticamente um *tibble* padrão sem índices hierárquicos. Julia (`combine`) alinha-se ao R no resultado (retorna um DataFrame padrão, sem índices complexos), mas usa uma sintaxe de transformação explicita (`:col_origem => função => :col_destino`), o que garante maior clareza programática e facilidade em processamento paralelo.
+
+---
+
+Por fim, em Transformação (Window Functions), a diferença é a explicitude versus contexto. Python (`.transform`) é rígido, separa estritamente agregação de transformação, sendo obrigatório mudar o método para realizar o *broadcasting*. R (`mutate`) possui fluidez total; o contexto define o comportamento e o mesmo verbo aplica a lógica de janela automaticamente se houver grupos. Julia (`transform`) equilibra os dois: utiliza um verbo específico (igual ao Python) para indicar que o número de linhas será mantido, mas mantém a sintaxe unificada de pares do `combine`, tornando a leitura do código mais previsível e consistente entre operações.
+
+---
+
+Dessa forma, o R (dplyr) vence na velocidade de exploração e legibilidade humana. O Python (Pandas) vence na engenharia e integração com ecossistemas de produção e Machine Learning. No entanto, Julia (DataFrames.jl) vence na performance computacional e consistência. Ela resolve o 'problema das duas linguagens', oferecendo a expressividade de análise do R com a robustez e velocidade de execução superior ao C/Python, ideal para *Big Data* onde a eficiência de memória e tempo de processamento são críticos.
+
+---
+
+## 4) Reformatação
+
+-   Reformatação (pivoting): o primeiro trabalho que faremos será a transformação de dados do formato "longo" para o formato "largo", ou seja quebrar colunas com muitas linhas de valores unicos em várias colunas.
+
+---
+
+-   Nesse caso, será utilizada a tabela staff_schedule.csv, onde podemos observar, principalmente, a coluna *week, staff_name e present,* que indicam a semana, o nome do funcionário do hospital e se ele estava presente naquela semana. Ou seja, para cada funcionário existem 52 linhas de semanas para indicar se ele estava ou não presente, o que faremos é criar uma coluna para cada funcionário, de modo que no final a tabela terá apenas 52 linhas, a quantidade total de semanas.
+
+---
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+ # Importando o banco
+using CSV
+using DataFrames
+
+df_funcionarios = CSV.read("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv", DataFrame)
+
+# Selecionando as variáveis necessárias
+df_funcionarios = select(df_funcionarios, :week, :staff_name, :present)
+
+# Pivotando os dados (unstack)
+
+#linhas = semanas (1 a 52)
+#colunas = nomes únicos dos funcionarios
+#valores = presença (0 ou 1)
+
+df_funcionarios_pivot = unstack(df_funcionarios, :week, :staff_name, :present)
+```
+
+
+---
+
+```{julia}
+#| eval: true
+#| echo: true
+first(df_funcionarios_pivot, 6)
+```
+
+
+---
+
+## Julia vs. R vs. Python
+
+```{r}
+#| eval: true
+#| echo: true
+# Em R
+
+library(tidyverse)
+
+# importar CSV
+df <- read_csv("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv")
+
+# Mantendo apenas as colunas necessárias
+df_small <- df %>% 
+select(week, staff_name, present)
+
+# Pivotando (cada staff vira coluna)
+df_wide <- df_small %>%
+   pivot_wider(
+     names_from = staff_name,
+     values_from = present
+   ) %>%
+   arrange(week)
+
+ print(df_wide)
+```
+
+---
+
+```{python}
+#| eval: true
+#| echo: true
+# Em python
+
+import pandas as pd
+
+# importar CSV
+df = pd.read_csv("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv")
+
+# manter apenas week, staff_name, present
+df_small = df[["week", "staff_name", "present"]]
+
+# pivotar
+df_wide = df_small.pivot_table(
+    index="week",
+    columns="staff_name",
+    values="present",
+    aggfunc="first"   # assume 1 valor por semana por funcionário
+).reset_index()
+
+# garantir ordenação
+df_wide = df_wide.sort_values("week")
+
+print(df_wide)
+```
+
+---
+
+-   Em Julia e R é muito mais prático realizar o pivotamento em comparação com Python, entre Julia e R via R ainda demanda um pouco mais de argumentos. Em questão de tempo, como o banco é bem pequeno, a diferença é irrelevante
+
+---
+
+## 5) Combinação
+
+-   Join: o próximo trabalho será realizar a junção de diferentes tabelas através de uma variável em comum. Nesse caso, iremos juntar a tabela pivotada que criamos anteriormente com a tabela services_weekly.csv, que contém dados semanais (semana 1 a 52 também) dos serviços prestados pelo hospital. Para isso primeiro vamos pivotar também a tabela para ficar com a coluna de semana igual e realizar o join a partir dela a fim de, por exemplo, verificar se a nota de satisfação relativa ao trabalho dos funcionários tem relação com a quantidade de funcionários presentes:
+
+---
+
+```{julia}
+#| results: hide
+#| eval: true
+#| echo: true
+# Importando o banco e selecionando as variaveis de interesse
+using CSV
+ using DataFrames
+
+ df_servicos = CSV.read("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/services_weekly.csv", DataFrame)
+df_servicos = select(df_servicos, Not([:month, :service, :event]))
+
+# Pivotando os dados
+using Statistics
+
+df_servicos_pivot = combine(groupby(df_servicos, :week), 
+    :available_beds => sum,
+    :patients_request => sum,
+    :patients_admitted => sum,
+    :patients_refused => sum,
+    :patient_satisfaction => mean,
+     :staff_morale => mean
+)
+
+# Modificando a tabela anterior para mostrar apenas a quantidade de funcionarios presentes por semana
+df_presenca_semanal = combine(groupby(df_funcionarios, :week),
+                                 :present => sum => :funcionarios_presentes)
+
+# Juntando as tabelas
+
+df_join = innerjoin(df_presenca_semanal, df_servicos_pivot, on = :week)
+```
+    
+---
+    
+```{julia}
+#| eval: true
+#| echo: true
+println(df_join)
+```
+    
+---
+
+## Julia vs. R vs. Python
+
+```{r}
+#| eval: true
+#| echo: true
+# Em R
+
+library(dplyr)
+library(readr)
+
+# Somando presenças por semana
+df_funcionarios_semanal <- df_small %>%
+  group_by(week) %>%
+  summarise(funcionarios_presentes = sum(present, na.rm = TRUE))
+
+# Importando e pivotando a segunda tabela
+df_servicos <- read_csv("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/services_weekly.csv")
+
+df_servicos_pivot <- df_servicos %>%
+  select(-month, -service, -event) %>%  # remover colunas
+  group_by(week) %>%
+  summarise(
+    available_beds = sum(available_beds, na.rm = TRUE),
+    patients_request = sum(patients_request, na.rm = TRUE),
+    patients_admitted = sum(patients_admitted, na.rm = TRUE),
+    patients_refused = sum(patients_refused, na.rm = TRUE),
+    patient_satisfaction = mean(patient_satisfaction, na.rm = TRUE),
+    staff_morale = mean(staff_morale, na.rm = TRUE)
+  )
+
+# Juntando as tabelas
+df_join <- df_funcionarios_semanal %>%
+  inner_join(df_servicos_pivot, by = "week")
+
+df_join
+```
+
+---
+
+```{python}
+#| eval: true
+#| echo: true
+# Em Python
+
+import pandas as pd
+
+# Somar presenças por semana
+df_funcionarios = pd.read_csv("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv")
+
+df_funcionarios_semanal = (
+    df_funcionarios
+    .groupby("week", as_index=False)["present"]
+    .sum()
+    .rename(columns={"present": "funcionarios_presentes"})
+)
+
+# Importando e pivotando a segunda tabela
+
+df_servicos = pd.read_csv("C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/services_weekly.csv")
+df_servicos = df_servicos.drop(columns=["month", "service", "event"])
+
+df_servicos_pivot = df_servicos.groupby("week", as_index=False).agg({
+    "available_beds": "sum",
+    "patients_request": "sum",
+    "patients_admitted": "sum",
+    "patients_refused": "sum",
+    "patient_satisfaction": "mean",
+    "staff_morale": "mean"
+})
+
+# Jutando as tabelas
+
+df_join = df_funcionarios_semanal.merge(df_servicos_pivot, on="week", how="inner")
+
+print(df_join)
+```
+
+---
+
+-   Em termos de facilidade apenas da funcção de juntar as tabelas as 3 linguagens se mostraram bem parecidas, com uma mínima quantidade a mais de caracteres na argumentação das funções de join. Porém, pela linguagem Julia ainda conseguimos realizar o processo com menos linhas e caracteres de código comparado a R e Python.
