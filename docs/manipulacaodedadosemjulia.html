@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="manipulacaodedadosemjulia_files/libs/clipboard/clipboard.min.js"></script>
+<script src="manipulacaodedadosemjulia_files/libs/quarto-html/tabby.min.js"></script>
+<script src="manipulacaodedadosemjulia_files/libs/quarto-html/popper.min.js"></script>
+<script src="manipulacaodedadosemjulia_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="manipulacaodedadosemjulia_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="manipulacaodedadosemjulia_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="manipulacaodedadosemjulia_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.6.42">
+
+  <title>Manipulação de banco de dados em Julia</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="manipulacaodedadosemjulia_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="manipulacaodedadosemjulia_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="manipulacaodedadosemjulia_files/libs/revealjs/dist/theme/quarto-2f366650f320edcfcf53d73c80250a32.css">
+  <link href="manipulacaodedadosemjulia_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="manipulacaodedadosemjulia_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="manipulacaodedadosemjulia_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="manipulacaodedadosemjulia_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Manipulação de banco de dados em Julia</h1>
+
+<div class="quarto-title-authors">
+</div>
+
+</section>
+<section id="manipulação-de-dados" class="slide level2">
+<h2>Manipulação de dados</h2>
+<p><strong>O que é Manipulação de Dados?</strong></p>
+<p>É o processo de transformar dados brutos em um formato “arrumado”: limpo, organizado e pronto para análise ou visualização.</p>
+<p><strong>As Ferramentas do Ecossistema:</strong></p>
+<ul>
+<li><p><strong>Julia:</strong> O pilar é o <code>DataFrames.jl</code>. (ou o <code>DataFramesMeta.jl</code> para uma sintaxe mais “amigável”, parecida com R).</p></li>
+<li><p><strong>R:</strong> A referência é o <code>dplyr</code> (parte do Tidyverse).</p></li>
+<li><p><strong>Python:</strong> A referência é o <code>pandas</code></p></li>
+</ul>
+</section>
+<section class="slide level2">
+
+<p>Vamos ver a seguir 5 tópicos sobre a manipulação de dados utilizando um banco sobre dados de pacientes (pacients.csv) :</p>
+<h3 id="fundamentos-e-limpeza-do-banco-em-julia"><strong>1) Fundamentos e Limpeza do Banco em Julia:</strong></h3>
+<p>Instalando os pacotes necessários</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href=""></a><span class="im">import</span> <span class="bu">Pkg</span></span>
+<span id="cb1-2"><a href=""></a><span class="bu">Pkg</span>.<span class="fu">add</span>([<span class="st">"DataFrames"</span>, <span class="st">"CSV"</span>, <span class="st">"Statistics"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Primeiro, vamos carregar as bibliotecas que acabamos de instalar. Em seguida, vamos usar a função `CSV.read` para carregar nosso arquivo `patients_with_NA_dirty.csv` para um `DataFrame`. Finalmente, usaremos `first` para “espiar” as 10 primeiras linhas e fazer um diagnóstico visual dos problemas.</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href=""></a><span class="co"># 1. Carregar as bibliotecas</span></span>
+<span id="cb2-2"><a href=""></a><span class="im">using</span> <span class="bu">DataFrames</span>, <span class="bu">CSV</span>, <span class="bu">Statistics</span></span>
+<span id="cb2-3"><a href=""></a></span>
+<span id="cb2-4"><a href=""></a><span class="co"># 2. Ler o arquivo CSV para um DataFrame</span></span>
+<span id="cb2-5"><a href=""></a>df_pacientes <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/patients_with_NA_dirty.csv"</span>, DataFrame)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href=""></a><span class="fu">first</span>(df_pacientes, <span class="fl">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>10×7 DataFrame
+ Row │ patient_id    name               age    arrival_date  departure_date  s ⋯
+     │ String15      String31           Int64  Dates.Date?   Dates.Date?     S ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │ PAT-09484753  Richard Rodriguez     24  2025-03-16    2025-03-22      s ⋯
+   2 │ PAT-f0644084  Shannon Walker         6  2025-12-13    2025-12-14      s
+   3 │ PAT-ac6162e4  Julia Torres          24  2025-06-29    2025-07-05      g
+   4 │ PAT-3dda2bb5  Crystal Johnson       32  2025-10-12    2025-10-23      e
+   5 │ PAT-08591375  Garrett Lin           25  2025-02-18    2025-02-25      I ⋯
+   6 │ PAT-f4b29bae  Diana May             83  2025-06-26    2025-06-30      e
+   7 │ PAT-283cda07  William Herrera       62  2025-12-26    2025-12-27      e
+   8 │ PAT-5b61868c  Ashley Waller          0  2025-05-21    2025-06-04      I
+   9 │ PAT-f9c8afa6  Victor Baker          50  2025-07-30    missing         g ⋯
+  10 │ PAT-5290be70  Jeffrey Chandler      29  missing       2025-11-14      e
+                                                               2 columns omitted</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Com base na saída do código, aqui estão os 3 problemas principais que identificamos:</p>
+<ul>
+<li><p><strong>Problema 1: Dados Sensíveis (Privacidade)</strong></p>
+<p>A coluna name contém nomes completos de pacientes, que são Dados Pessoais Identificáveis (PII) e devem ser removidos por privacidade.</p></li>
+</ul>
+</section>
+<section class="slide level2">
+
+<ul>
+<li><p><strong>Problema 2: Dados Não-Padronizados (Inconsistência)</strong></p>
+<p>A coluna service possui dados inconsistentes. A amostra mostra surgery (minúsculo) e ICU (maiúsculo), o que quebraria filtros e agrupamentos.</p></li>
+<li><p><strong>Problema 3: Dados Faltantes (Nulos)</strong></p>
+<p>A amostra mostra missing nas colunas arrival_date (linha 10) e departure_date (linha 9). Esses valores nulos precisam ser tratados.</p></li>
+</ul>
+<p>Vamos Resolver cada um deles:</p>
+</section>
+<section class="slide level2">
+
+<ol type="1">
+<li><p><strong>Seleção de Colunas :</strong> Usamos isso para focar a análise apenas no que importa ou para remover dados sensíveis (Problema 1: <code>name</code>).</p>
+<p><strong>Função Principal (Julia):</strong> <code>select()</code> <strong>Funções Auxiliares (Julia):</strong> <code>Not()</code> (para excluir), <code>Between()</code> (para selecionar um intervalo), <code>All()</code> (para selecionar tudo).</p></li>
+</ol>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href=""></a><span class="co"># Criamos 'df_limpo' selecionando tudo, MENOS (Not) a coluna :name</span></span>
+<span id="cb5-2"><a href=""></a>df_limpo <span class="op">=</span> <span class="fu">select</span>(df_pacientes, <span class="fu">Not</span>(<span class="op">:</span>name))</span>
+<span id="cb5-3"><a href=""></a></span>
+<span id="cb5-4"><a href=""></a><span class="co"># Vamos verificar as colunas do novo DataFrame</span></span>
+<span id="cb5-5"><a href=""></a><span class="fu">println</span>(<span class="st">"--- Colunas após remover 'name' ---"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href=""></a><span class="fu">names</span>(df_limpo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>6-element Vector{String}:
+ "patient_id"
+ "age"
+ "arrival_date"
+ "departure_date"
+ "service"
+ "satisfaction"</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<ol start="2" type="1">
+<li><p><strong>Padronização de Dados:</strong> Usamos isso para corrigir dados inconsistentes (Problema 2: <code>ICU</code> vs <code>surgery</code>). Se não padronizarmos, nossos filtros e agrupamentos falharão.</p>
+<p><strong>Função Principal (Julia):</strong> <code>transform()</code> (Usada para modificar uma coluna). <strong>Funções Auxiliares (Julia):</strong> <code>ByRow()</code> (Para aplicar uma função em cada linha) e <code>lowercase()</code> (A função específica que usaremos para converter para minúsculas).</p></li>
+</ol>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href=""></a><span class="co"># 1. Mostrar os valores únicos ANTES da limpeza</span></span>
+<span id="cb8-2"><a href=""></a><span class="fu">println</span>(<span class="st">"Valores únicos ANTES: "</span>, <span class="fu">unique</span>(df_limpo.service))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Valores únicos ANTES: String31["surgery", "general_medicine", "emergency", "ICU"]</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href=""></a></span>
+<span id="cb10-2"><a href=""></a><span class="co"># 2. Aplicar a transformação: :service =&gt; ByRow(lowercase) =&gt; :service</span></span>
+<span id="cb10-3"><a href=""></a>df_limpo <span class="op">=</span> <span class="fu">transform</span>(df_limpo, <span class="op">:</span>service <span class="op">=&gt;</span> <span class="fu">ByRow</span>(lowercase) <span class="op">=&gt;</span> <span class="op">:</span>service)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1000×6 DataFrame
+  Row │ patient_id    age    arrival_date  departure_date  service           s ⋯
+      │ String15      Int64  Dates.Date?   Dates.Date?     String            F ⋯
+──────┼─────────────────────────────────────────────────────────────────────────
+    1 │ PAT-09484753     24  2025-03-16    2025-03-22      surgery             ⋯
+    2 │ PAT-f0644084      6  2025-12-13    2025-12-14      surgery
+    3 │ PAT-ac6162e4     24  2025-06-29    2025-07-05      general_medicine
+    4 │ PAT-3dda2bb5     32  2025-10-12    2025-10-23      emergency
+    5 │ PAT-08591375     25  2025-02-18    2025-02-25      icu                 ⋯
+    6 │ PAT-f4b29bae     83  2025-06-26    2025-06-30      emergency
+    7 │ PAT-283cda07     62  2025-12-26    2025-12-27      emergency
+    8 │ PAT-5b61868c      0  2025-05-21    2025-06-04      icu
+  ⋮   │      ⋮          ⋮         ⋮              ⋮                ⋮            ⋱
+  994 │ PAT-e5d6a9cf     76  2025-12-27    missing         icu                 ⋯
+  995 │ PAT-2fa08c0d     79  2025-01-22    missing         emergency
+  996 │ PAT-a01bf534     26  2025-12-02    2025-12-04      emergency
+  997 │ PAT-87fa07bd     89  2025-11-18    2025-11-30      emergency
+  998 │ PAT-8f07e894     72  2025-12-12    2025-12-21      icu                 ⋯
+  999 │ PAT-4ae301e1     47  2025-02-08    2025-02-20      icu
+ 1000 │ PAT-e2ef9c5f     64  2025-05-04    2025-05-08      general_medicine
+                                                   1 column and 985 rows omitted</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href=""></a><span class="co"># 3. Mostrar os valores únicos DEPOIS da limpeza</span></span>
+<span id="cb12-2"><a href=""></a><span class="fu">println</span>(<span class="st">"Valores únicos DEPOIS: "</span>, <span class="fu">unique</span>(df_limpo.service))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Valores únicos DEPOIS: ["surgery", "general_medicine", "emergency", "icu"]</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<ol start="3" type="1">
+<li><strong>Filtragem de Linhas:</strong> É o ato de escolher (manter) linhas que atendem a uma condição lógica. Agora que padronizamos nossos dados, podemos filtrar com segurança. <strong>Função Principal (Julia):</strong> <code>filter()</code> <strong>Sintaxe (Julia):</strong> Usamos <code>filter(:coluna =&gt; ==(valor), df)</code> para filtros simples, ou <code>filter(row -&gt; row.condicao, df)</code> para filtros mais complexos.</li>
+</ol>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href=""></a><span class="co"># Agora o filtro por "icu" (minúsculo) funciona para todos os casos</span></span>
+<span id="cb14-2"><a href=""></a>filtro_correto <span class="op">=</span> <span class="fu">filter</span>(<span class="op">:</span>service <span class="op">=&gt;</span> <span class="op">==</span>(<span class="st">"icu"</span>), df_limpo)</span>
+<span id="cb14-3"><a href=""></a></span>
+<span id="cb14-4"><a href=""></a><span class="fu">println</span>(<span class="st">"Total de pacientes encontrados em 'icu': "</span>, <span class="fu">nrow</span>(filtro_correto))</span>
+<span id="cb14-5"><a href=""></a><span class="fu">println</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Amostra dos pacientes filtrados:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href=""></a><span class="fu">first</span>(filtro_correto, <span class="fl">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>3×6 DataFrame
+ Row │ patient_id    age    arrival_date  departure_date  service  satisfaction
+     │ String15      Int64  Dates.Date?   Dates.Date?     String   Float64?
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │ PAT-08591375     25  2025-02-18    2025-02-25      icu              76.0
+   2 │ PAT-5b61868c      0  2025-05-21    2025-06-04      icu              82.0
+   3 │ PAT-003ce690     29  2025-01-19    2025-01-21      icu              60.0</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<ol start="4" type="1">
+<li><strong>Tratamento de Dados Faltantes:</strong> Aqui corrigimos o Problema 3 (os valores <code>missing</code>). Não podemos fazer cálculos com nulos. Temos duas estratégias: <strong>1. Nulos Críticos:</strong> Se o dado é essencial (como <code>arrival_date</code>), removemos a linha inteira. <strong>Função (Julia):</strong> <code>dropmissing()</code> <strong>2. Nulos Não-Críticos:</strong> Se o dado é opcional (como <code>satisfaction</code>), preenchemos o buraco. <strong>Função (Julia):</strong> <code>coalesce()</code> (Substitui o <code>missing</code> por um valor padrão, como a mediana).</li>
+</ol>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href=""></a><span class="co"># --- 1. Nulos Críticos (dropmissing) ---</span></span>
+<span id="cb17-2"><a href=""></a><span class="fu">println</span>(<span class="st">"Total de linhas ANTES de 'dropmissing': "</span>, <span class="fu">nrow</span>(df_limpo))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total de linhas ANTES de 'dropmissing': 1000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb19-1"><a href=""></a></span>
+<span id="cb19-2"><a href=""></a><span class="co"># Removemos linhas onde a coluna :arrival_date é 'missing'</span></span>
+<span id="cb19-3"><a href=""></a><span class="fu">dropmissing!</span>(df_limpo, <span class="op">:</span>arrival_date)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>950×6 DataFrame
+ Row │ patient_id    age    arrival_date  departure_date  service           sa ⋯
+     │ String15      Int64  Dates.Date    Dates.Date?     String            Fl ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │ PAT-09484753     24  2025-03-16    2025-03-22      surgery              ⋯
+   2 │ PAT-f0644084      6  2025-12-13    2025-12-14      surgery
+   3 │ PAT-ac6162e4     24  2025-06-29    2025-07-05      general_medicine
+   4 │ PAT-3dda2bb5     32  2025-10-12    2025-10-23      emergency
+   5 │ PAT-08591375     25  2025-02-18    2025-02-25      icu                  ⋯
+   6 │ PAT-f4b29bae     83  2025-06-26    2025-06-30      emergency
+   7 │ PAT-283cda07     62  2025-12-26    2025-12-27      emergency
+   8 │ PAT-5b61868c      0  2025-05-21    2025-06-04      icu
+  ⋮  │      ⋮          ⋮         ⋮              ⋮                ⋮             ⋱
+ 944 │ PAT-e5d6a9cf     76  2025-12-27    missing         icu                  ⋯
+ 945 │ PAT-2fa08c0d     79  2025-01-22    missing         emergency
+ 946 │ PAT-a01bf534     26  2025-12-02    2025-12-04      emergency
+ 947 │ PAT-87fa07bd     89  2025-11-18    2025-11-30      emergency
+ 948 │ PAT-8f07e894     72  2025-12-12    2025-12-21      icu                  ⋯
+ 949 │ PAT-4ae301e1     47  2025-02-08    2025-02-20      icu
+ 950 │ PAT-e2ef9c5f     64  2025-05-04    2025-05-08      general_medicine
+                                                   1 column and 935 rows omitted</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb21-1"><a href=""></a></span>
+<span id="cb21-2"><a href=""></a><span class="fu">println</span>(<span class="st">"Total de linhas DEPOIS de 'dropmissing': "</span>, <span class="fu">nrow</span>(df_limpo))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total de linhas DEPOIS de 'dropmissing': 950</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb23-1"><a href=""></a><span class="co"># --- 2. Nulos Não-Críticos (coalesce) ---</span></span>
+<span id="cb23-2"><a href=""></a><span class="co">#Preenchendo 'satisfaction'</span></span>
+<span id="cb23-3"><a href=""></a></span>
+<span id="cb23-4"><a href=""></a><span class="co"># Calcular a mediana da satisfação (ignorando os nulos restantes)</span></span>
+<span id="cb23-5"><a href=""></a>mediana_satisf <span class="op">=</span> <span class="fu">median</span>(<span class="fu">skipmissing</span>(df_limpo.satisfaction))</span>
+<span id="cb23-6"><a href=""></a></span>
+<span id="cb23-7"><a href=""></a><span class="co"># Preencher os 'missing' com a mediana</span></span>
+<span id="cb23-8"><a href=""></a>df_limpo <span class="op">=</span> <span class="fu">transform</span>(df_limpo, </span>
+<span id="cb23-9"><a href=""></a>    <span class="op">:</span>satisfaction <span class="op">=&gt;</span> (x <span class="op">-&gt;</span> <span class="fu">coalesce</span>.(x, mediana_satisf)) <span class="op">=&gt;</span> <span class="op">:</span>satisfaction</span>
+<span id="cb23-10"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb24-1"><a href=""></a><span class="co"># 3. Prova: Verificar 'nmissing' em 'satisfaction' e 'arrival_date'</span></span>
+<span id="cb24-2"><a href=""></a><span class="fu">println</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Verificação de Nulos após limpeza total:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Verificação de Nulos após limpeza total:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb26-1"><a href=""></a><span class="fu">describe</span>(df_limpo, <span class="op">:</span>nmissing) <span class="co"># Deve mostrar 0 nmissing para ambos</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>6×2 DataFrame
+ Row │ variable        nmissing
+     │ Symbol          Int64
+─────┼──────────────────────────
+   1 │ patient_id             0
+   2 │ age                    0
+   3 │ arrival_date           0
+   4 │ departure_date        48
+   5 │ service                0
+   6 │ satisfaction           0</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Pronto! Nosso `df_limpo` está completo. Removemos dados sensíveis, padronizamos o texto e tratamos todos os `missing`. Vamos rodar `describe` pela última vez para *provar* que o DataFrame está limpo (veja como `nmissing` será 0 onde limpamos) e pronto para a próxima etapa da análise.</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href=""></a><span class="fu">println</span>(<span class="st">"--- DataFrame Final Limpo ---"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>--- DataFrame Final Limpo ---</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb30-1"><a href=""></a><span class="fu">first</span>(df_limpo, <span class="fl">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>5×6 DataFrame
+ Row │ patient_id    age    arrival_date  departure_date  service           sa ⋯
+     │ String15      Int64  Dates.Date    Dates.Date?     String            Fl ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │ PAT-09484753     24  2025-03-16    2025-03-22      surgery              ⋯
+   2 │ PAT-f0644084      6  2025-12-13    2025-12-14      surgery
+   3 │ PAT-ac6162e4     24  2025-06-29    2025-07-05      general_medicine
+   4 │ PAT-3dda2bb5     32  2025-10-12    2025-10-23      emergency
+   5 │ PAT-08591375     25  2025-02-18    2025-02-25      icu                  ⋯
+                                                                1 column omitted</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb32-1"><a href=""></a></span>
+<span id="cb32-2"><a href=""></a><span class="co"># Prova Final (describe)</span></span>
+<span id="cb32-3"><a href=""></a><span class="co"># 'describe' agora mostra 0 nmissing em arrival_date e satisfaction</span></span>
+<span id="cb32-4"><a href=""></a><span class="fu">describe</span>(df_limpo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>6×7 DataFrame
+ Row │ variable        mean     min           median      max           nmissi ⋯
+     │ Symbol          Union…   Any           Any         Any           Int64  ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │ patient_id               PAT-003ce690              PAT-fffe27aa         ⋯
+   2 │ age             45.6432  0             46.0        89
+   3 │ arrival_date             2025-01-02                2025-12-31
+   4 │ departure_date           2025-01-06    2025-07-08  2026-01-13
+   5 │ service                  emergency                 surgery              ⋯
+   6 │ satisfaction    79.6095  60.0          80.0        99.0
+                                                               2 columns omitted</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Esta saída é a prova de que nossa limpeza funcionou. A primeira tabela (<code>first</code>) mostra que o <code>df_limpo</code> não tem mais a coluna <code>name</code> e que a coluna <code>service</code> está padronizada (ex: “surgery”, “icu” em minúsculas). A segunda tabela (<code>describe</code>) é a prova final: ela agora consegue calcular estatísticas (como <code>mean</code> e <code>median</code>) para a coluna <code>satisfaction</code>. Isso só é possível porque os valores <code>missing</code> foram preenchidos com sucesso pela mediana (repare que a mediana da coluna agora é <code>80.0</code>). O <code>describe</code> também confirma que tratamos os <code>missing</code> de <code>arrival_date</code> (que foi limpa pelo <code>dropmissing</code>), tornando nosso <code>df_limpo</code> pronto para a próxima fase da análise.</p>
+</section>
+<section id="julia-vs.-r-vs.-python" class="slide level2">
+<h2>Julia vs.&nbsp;R vs.&nbsp;Python</h2>
+<p>Como vimos, os conceitos de limpeza são universais. O que muda é a “ferramenta” (a função). Aqui está uma comparação objetiva das funções que usamos em Julia com seus equivalentes mais comuns em R (pacotes <code>dplyr</code>/<code>tidyr</code>) e Python (<code>pandas</code>).</p>
+</section>
+<section class="slide level2">
+
+<h3 id="seleção-de-colunas-remover-name">1. Seleção de Colunas (Remover <code>name</code>)</h3>
+<ul>
+<li><p>Julia (DataFrames.jl): select(df, Not(:name))</p></li>
+<li><p>R (dplyr): select(df, -name)</p></li>
+<li><p>Python (pandas): df.drop(columns=[‘name’])</p></li>
+</ul>
+<p><strong>Observação:</strong> A sintaxe do Julia e do R (<code>dplyr</code>) é muito semelhante para seleção.</p>
+</section>
+<section class="slide level2">
+
+<h3 id="padronização-minúsculas-em-service">2. Padronização (Minúsculas em <code>service</code>)</h3>
+<ul>
+<li><p>Julia (DataFrames.jl): transform(df, :service =&gt; ByRow(lowercase) =&gt; :service)</p></li>
+<li><p>R (dplyr): mutate(df, service = tolower(service))</p></li>
+<li><p>Python (pandas): df[‘service’] = df[‘service’].str.lower()</p></li>
+</ul>
+<p><strong>Observação:</strong> Todas as linguagens têm uma função de “transformar/mutar” colunas. O R (<code>mutate</code>) e o Python (acesso <code>.str</code>) são um pouco mais diretos para esta operação específica.</p>
+</section>
+<section class="slide level2">
+
+<h3 id="filtragem-de-linhas-selecionar-icu">3. Filtragem de Linhas (Selecionar <code>icu</code>)</h3>
+<ul>
+<li><p>Julia (DataFrames.jl): filter(:service =&gt; ==(“icu”), df)</p></li>
+<li><p>R (dplyr): filter(df, service == “icu”)</p></li>
+<li><p>Python (pandas): df[ df[‘service’] == “icu” ]</p></li>
+</ul>
+<p><strong>Observação:</strong> R (<code>dplyr</code>) é frequentemente considerado o mais “limpo” para filtros. Julia é muito claro. Python (<code>pandas</code>) usa uma sintaxe de “máscara booleana” (indexação com colchetes) que pode ser confusa para iniciantes.</p>
+</section>
+<section class="slide level2">
+
+<h3 id="remover-nulos-linhas-dropmissing">4. Remover Nulos (Linhas <code>dropmissing</code>)</h3>
+<ul>
+<li><p>Julia (DataFrames.jl): dropmissing(df, :arrival_date)</p></li>
+<li><p>R (tidyr): drop_na(df, arrival_date)</p></li>
+<li><p>Python (pandas): df.dropna(subset=[‘arrival_date’])</p></li>
+</ul>
+<p><strong>Observação:</strong> As três funções são quase idênticas no nome e na lógica.</p>
+</section>
+<section class="slide level2">
+
+<h3 id="preencher-nulos-coalesce">5. Preencher Nulos (<code>coalesce</code>)</h3>
+<ul>
+<li><p>Julia (DataFrames.jl): transform(df, :satisfaction =&gt; (x -&gt; coalesce.(x, mediana)) =&gt; :satisfaction)</p></li>
+<li><p>R (tidyr): replace_na(df, list(satisfaction = mediana))</p></li>
+<li><p>Python (pandas): df[‘satisfaction’] = df[‘satisfaction’].fillna(mediana)</p></li>
+</ul>
+<p><strong>Observação:</strong> A função <code>coalesce</code> do Julia é muito poderosa (pega o primeiro valor não nulo de vários argumentos). Em R, usamos <code>replace_na</code> (do <code>tidyr</code>), e em Python, o método <code>.fillna()</code>.<br>
+<br>
+</p>
+</section>
+<section id="transformação-criação-de-colunas" class="slide level2">
+<h2>2) Transformação Criação de colunas</h2>
+<p>Podemos criar colunas usando (banco.coluna) no meu caso usarei o banco <code>patients</code> e vou adicionar uma nova coluna chamada <code>satisfaction_category</code> para ser uma medida de satisfação mais facil e menos poluido para ler, maior ou igual a 80 é <strong>High</strong>, maior ou igual a 50 é <strong>Medium</strong>, o resto seria <strong>Low.</strong></p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb34-1"><a href=""></a><span class="co"># Importando os bancos que serão usados nas manipulações</span></span>
+<span id="cb34-2"><a href=""></a></span>
+<span id="cb34-3"><a href=""></a>df_pacientes <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/patients.csv"</span>, DataFrame)</span>
+<span id="cb34-4"><a href=""></a></span>
+<span id="cb34-5"><a href=""></a>df_funcionarios <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv"</span>, DataFrame)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb35-1"><a href=""></a>df_pacientes.satisfaction_category <span class="op">=</span> [</span>
+<span id="cb35-2"><a href=""></a>    if s <span class="op">&gt;=</span> <span class="fl">80</span></span>
+<span id="cb35-3"><a href=""></a>        <span class="st">"High"</span></span>
+<span id="cb35-4"><a href=""></a>    elseif s <span class="op">&gt;=</span> <span class="fl">50</span></span>
+<span id="cb35-5"><a href=""></a>        <span class="st">"Medium"</span></span>
+<span id="cb35-6"><a href=""></a>    else</span>
+<span id="cb35-7"><a href=""></a>        <span class="st">"Low"</span></span>
+<span id="cb35-8"><a href=""></a>    <span class="kw">end</span></span>
+<span id="cb35-9"><a href=""></a>    for s <span class="kw">in</span> df_pacientes.satisfaction</span>
+<span id="cb35-10"><a href=""></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb36-1"><a href=""></a><span class="fu">select</span>(</span>
+<span id="cb36-2"><a href=""></a>    df_pacientes,</span>
+<span id="cb36-3"><a href=""></a>    [<span class="op">:</span>patient_id, <span class="op">:</span>name, <span class="op">:</span>satisfaction, <span class="op">:</span>satisfaction_category]</span>
+<span id="cb36-4"><a href=""></a>) <span class="op">|&gt;</span> df <span class="op">-&gt;</span> <span class="fu">first</span>(df, <span class="fl">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>5×4 DataFrame
+ Row │ patient_id    name               satisfaction  satisfaction_category
+     │ String15      String31           Int64         String
+─────┼──────────────────────────────────────────────────────────────────────
+   1 │ PAT-09484753  Richard Rodriguez            61  Medium
+   2 │ PAT-f0644084  Shannon Walker               83  High
+   3 │ PAT-ac6162e4  Julia Torres                 83  High
+   4 │ PAT-3dda2bb5  Crystal Johnson              81  High
+   5 │ PAT-08591375  Garrett Lin                  76  Medium</code></pre>
+</div>
+</div>
+</section>
+<section id="renomear-colunasrename-ou-rename" class="slide level2">
+<h2>Renomear colunas(rename ou rename!)</h2>
+<p>Vamos renomear a coluna <code>present</code> do banco <code>staff_schedule</code>, para <code>attendance</code> usando a função <code>rename!</code>.</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb38-1"><a href=""></a><span class="co"># Renomear</span></span>
+<span id="cb38-2"><a href=""></a><span class="fu">rename!</span>(df_funcionarios, <span class="op">:</span>present <span class="op">=&gt;</span> <span class="op">:</span>attendance);</span>
+<span id="cb38-3"><a href=""></a></span>
+<span id="cb38-4"><a href=""></a><span class="co"># Substituir valores</span></span>
+<span id="cb38-5"><a href=""></a>df_funcionarios.attendance <span class="op">=</span> <span class="fu">replace</span>(df_funcionarios.attendance,</span>
+<span id="cb38-6"><a href=""></a>    <span class="fl">1</span> <span class="op">=&gt;</span> <span class="st">"present"</span>,</span>
+<span id="cb38-7"><a href=""></a>    <span class="fl">0</span> <span class="op">=&gt;</span> <span class="st">"absent"</span></span>
+<span id="cb38-8"><a href=""></a>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb39-1"><a href=""></a><span class="fu">println</span>(<span class="fu">first</span>(df_funcionarios, <span class="fl">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>5×6 DataFrame
+ Row │ week   staff_id      staff_name    role      service    attendance
+     │ Int64  String15      String31      String31  String31   Any
+─────┼────────────────────────────────────────────────────────────────────
+   1 │     1  STF-b77cdc60  Allison Hill  doctor    emergency  present
+   2 │     2  STF-b77cdc60  Allison Hill  doctor    emergency  present
+   3 │     3  STF-b77cdc60  Allison Hill  doctor    emergency  absent
+   4 │     4  STF-b77cdc60  Allison Hill  doctor    emergency  present
+   5 │     5  STF-b77cdc60  Allison Hill  doctor    emergency  present</code></pre>
+</div>
+</div>
+</section>
+<section id="reordenar-colunassort-ou-sort" class="slide level2">
+<h2>Reordenar colunas(sort ou sort!)</h2>
+<p>E para finalizar vamos reordenar a coluna <code>attendance</code> que acabamos de criar para mostrar os médicos presentes <code>(present)</code> primeiro e os não presentes <code>(absent)</code> depois para cada semana usando a função <code>sort</code> ou <code>sort!</code>.</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb41-1"><a href=""></a>sorted <span class="op">=</span> <span class="fu">sort</span>(df_funcionarios, [<span class="op">:</span>week, <span class="op">:</span>attendance])</span>
+<span id="cb41-2"><a href=""></a><span class="fu">select</span>(<span class="fu">first</span>(sorted, <span class="fl">30</span>), [<span class="op">:</span>week, <span class="op">:</span>staff_name, <span class="op">:</span>role, <span class="op">:</span>service, <span class="op">:</span>attendance])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb42-1"><a href=""></a><span class="fu">select</span>(<span class="fu">first</span>(sorted, <span class="fl">30</span>), [<span class="op">:</span>week, <span class="op">:</span>staff_name, <span class="op">:</span>role, <span class="op">:</span>attendance])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>30×4 DataFrame
+ Row │ week   staff_name            role               attendance
+     │ Int64  String31              String31           Any
+─────┼────────────────────────────────────────────────────────────
+   1 │     1  Ryan Munoz            nurse              absent
+   2 │     1  Michele Williams      nurse              absent
+   3 │     1  Carla Gray            nurse              absent
+   4 │     1  Justin Baker          nurse              absent
+   5 │     1  Angelica Tucker       nurse              absent
+   6 │     1  Donald Wright         nursing_assistant  absent
+   7 │     1  Sarah Moore           nurse              absent
+   8 │     1  Sandra Aguilar        nurse              absent
+  ⋮  │   ⋮             ⋮                    ⋮              ⋮
+  24 │     1  Brian Ramirez         nurse              present
+  25 │     1  Holly Wood            nurse              present
+  26 │     1  Derek Zuniga          nurse              present
+  27 │     1  Lisa Jackson          nurse              present
+  28 │     1  Margaret Hawkins DDS  nurse              present
+  29 │     1  Patty Perez           nurse              present
+  30 │     1  Ethan Adams           nurse              present
+                                                   15 rows omitted</code></pre>
+</div>
+</div>
+</section>
+<section id="julia-vs.-r-vs.-python-1" class="slide level2">
+<h2>Julia vs.&nbsp;R vs.&nbsp;Python</h2>
+<p>Quando comparamos <strong>Julia</strong>, <strong>R</strong> e <strong>Python</strong> na hora de modificar linhas e colunas de um banco de dados, a principal diferença está no estilo de trabalho. Em <strong>Julia</strong>, as transformações são muito diretas: você acessa a coluna, aplica uma função e já vê o resultado, tudo com sintaxe clara e boa velocidade. Em <strong>R</strong>, especialmente com o <code>tidyverse</code>, o processo é o mais intuitivo possível — comandos como <code>mutate</code>, <code>filter</code> e <code>select</code> fazem a manipulação parecer quase uma frase, o que ajuda bastante no fluxo de análise.</p>
+</section>
+<section class="slide level2">
+
+<p>Já em <strong>Python</strong>, usando <code>pandas</code>, as alterações também são simples, como <code>df['nova'] = ...</code> ou <code>df.loc[...]</code>, mas a sintaxe costuma ser um pouco mais detalhada. Em resumo: <strong>Julia</strong> é enxuto e rápido, <strong>R</strong> é o mais natural de ler, e <strong>Python</strong> oferece versatilidade e é amplamente usado em outras áreas.</p>
+</section>
+<section id="agregação" class="slide level2">
+<h2>3) Agregação</h2>
+<p>Agregação consiste em resumir informações do conjunto de dados, como por exemplo, soma, média, mínimo/máximo contagem estatísticas por grupo. É outro processo extremamente essencial para análises exploratórias e modelagem.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb44-1"><a href=""></a><span class="co"># Importando os bancos que serão usados nas manipulações</span></span>
+<span id="cb44-2"><a href=""></a></span>
+<span id="cb44-3"><a href=""></a>df_pacientes <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/patients.csv"</span>, DataFrame)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<p><br>
+<strong>1.</strong> <strong>Conceito de Agrupamento: <code>groupby</code></strong></p>
+<p>A fundação de qualquer análise comparativa é a capacidade de segmentar o todo em partes lógicas. No nosso contexto hospitalar, analisar a média geral de satisfação de todos os pacientes (média global) pode esconder problemas graves em departamentos específicos. É necessário “quebrar” os dados por setor.<br>
+Em Julia, a função <code>groupby</code> não realiza cálculos imediatos; ela cria uma estrutura indexada eficiente que mapeia as linhas aos seus respectivos grupos.</p>
+</section>
+<section class="slide level2">
+
+<p>Vamos segmentar nossa base de dados pelo tipo de serviço prestado (<code>service</code>), pois esperamos que o perfil de um paciente na UTI (<code>ICU</code>) seja distinto de um paciente em cirurgia (<code>surgery</code>).</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb45-1"><a href=""></a><span class="im">using</span> <span class="bu">DataFrames</span>, <span class="bu">Statistics</span>, <span class="bu">Dates</span></span>
+<span id="cb45-2"><a href=""></a></span>
+<span id="cb45-3"><a href=""></a><span class="co"># Supondo que o CSV já foi carregado em 'df_pacients'</span></span>
+<span id="cb45-4"><a href=""></a><span class="co"># Criação do objeto agrupado por Serviço</span></span>
+<span id="cb45-5"><a href=""></a>gd_service <span class="op">=</span> <span class="fu">groupby</span>(df_pacientes, <span class="op">:</span>service)</span>
+<span id="cb45-6"><a href=""></a></span>
+<span id="cb45-7"><a href=""></a><span class="co"># Verificação da estrutura</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb46-1"><a href=""></a><span class="fu">println</span>(<span class="st">"Grupos formados: "</span>, <span class="fu">keys</span>(gd_service))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Grupos formados: DataFrames.GroupKey{GroupedDataFrame{DataFrame}}[GroupKey: (service = String31("surgery"),), GroupKey: (service = String31("general_medicine"),), GroupKey: (service = String31("emergency"),), GroupKey: (service = String31("ICU"),)]</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Ao executar este comando, geramos um <code>GroupedDataFrame</code>. Diferente de outras linguagens que podem criar cópias dos dados na memória, o Julia mantém referências (ponteiros) para as linhas originais. Isso torna o processo extremamente veloz, mesmo se tivermos milhões de pacientes. Este objeto <code>gd_service</code> é o ponto de partida para as próximas etapas.<br>
+<br>
+</p>
+</section>
+<section class="slide level2">
+
+<p><strong>2.</strong> <strong>Sumarização: <code>combine</code></strong></p>
+<p>Uma vez que os dados estão divididos logicamente, aplicamos a etapa de Summarization (ou Redução). O comando <code>combine</code> pega as múltiplas linhas de cada grupo e as “colapsa” em uma única linha de resumo.</p>
+<p>Análise de Performance por Departamento: Neste exemplo, queremos responder: “Qual serviço tem a melhor avaliação média?” e “Qual é a faixa etária típica de cada setor?”.</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb48-1"><a href=""></a><span class="co"># Calculando métricas agregadas por serviço</span></span>
+<span id="cb48-2"><a href=""></a>kpis_servicos <span class="op">=</span> <span class="fu">combine</span>(gd_service,</span>
+<span id="cb48-3"><a href=""></a>    <span class="op">:</span>satisfaction <span class="op">=&gt;</span> mean <span class="op">=&gt;</span> <span class="op">:</span>media_satisfacao,</span>
+<span id="cb48-4"><a href=""></a>    <span class="op">:</span>age <span class="op">=&gt;</span> median <span class="op">=&gt;</span> <span class="op">:</span>mediana_idade,</span>
+<span id="cb48-5"><a href=""></a>    nrow <span class="op">=&gt;</span> <span class="op">:</span>total_atendimentos</span>
+<span id="cb48-6"><a href=""></a>)</span>
+<span id="cb48-7"><a href=""></a></span>
+<span id="cb48-8"><a href=""></a><span class="co"># Ordenando para identificar os serviços com menor satisfação</span></span>
+<span id="cb48-9"><a href=""></a><span class="fu">sort!</span>(kpis_servicos, <span class="op">:</span>media_satisfacao)</span>
+<span id="cb48-10"><a href=""></a><span class="fu">display</span>(kpis_servicos)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Observe a sintaxe concisa: <code>:coluna_origem =&gt; função =&gt; :coluna_destino</code>.</p>
+<ol type="1">
+<li><p>Calculamos a média da coluna <code>satisfaction</code>.</p></li>
+<li><p>Calculamos a mediana da coluna <code>age</code> (a mediana é mais robusta que a média para idade, pois é menos afetada por valores extremos).</p></li>
+<li><p>Contamos o número de linhas (<code>nrow</code>) para saber o volume de atendimentos.</p></li>
+</ol>
+<p>O resultado é uma tabela enxuta onde cada linha é um serviço (ICU, surgery, etc.), permitindo uma comparação direta de performance entre departamentos.<br>
+<br>
+**<br>
+</p>
+</section>
+<section class="slide level2">
+
+<ol start="3" type="1">
+<li>Transformação Contextual: <code>transform</code>**</li>
+</ol>
+<p>Enquanto o <code>combine</code> reduz os dados, o <code>transform</code> mantém a granularidade original (o número de linhas não muda). O objetivo aqui é enriquecer a tabela original com dados calculados <em>dentro do contexto do grupo</em>. Isso é fundamental para responder perguntas relativas, como: “Este paciente está mais satisfeito do que a média <em>do departamento dele</em>?”.<br>
+Normalização da Satisfação (Centralização): Um índice de satisfação 80 pode ser ótimo na Emergência (onde o estresse é alto), mas medíocre na Medicina Geral. Para comparar justamente, calculamos o desvio de cada paciente em relação à média do seu setor.</p>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb49-1"><a href=""></a><span class="co"># Adicionando uma coluna de Desvio Relativo</span></span>
+<span id="cb49-2"><a href=""></a>df_analise <span class="op">=</span> <span class="fu">transform</span>(gd_service,</span>
+<span id="cb49-3"><a href=""></a>    <span class="op">:</span>satisfaction <span class="op">=&gt;</span> (x <span class="op">-&gt;</span> x <span class="op">.-</span> <span class="fu">mean</span>(x)) <span class="op">=&gt;</span> <span class="op">:</span>desvio_da_media</span>
+<span id="cb49-4"><a href=""></a>)</span>
+<span id="cb49-5"><a href=""></a></span>
+<span id="cb49-6"><a href=""></a><span class="co"># Visualizando um recorte dos dados</span></span>
+<span id="cb49-7"><a href=""></a><span class="fu">select</span>(df_analise, <span class="op">:</span>service, <span class="op">:</span>satisfaction, <span class="op">:</span>desvio_da_media)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>A função anônima <code>x -&gt; x .- mean(x)</code> opera sobre o vetor de satisfação de <em>cada grupo isoladamente</em>.</p>
+<ul>
+<li><p>Se o paciente A (Cirurgia) tem nota 85 e a média da Cirurgia é 80, seu desvio é +5.</p></li>
+<li><p>Se o paciente B (UTI) tem nota 85 e a média da UTI é 90, seu desvio é -5.</p></li>
+</ul>
+<p>Embora ambos tenham nota 85, o Paciente A teve uma experiência “acima da média” e o B “abaixo”. O <code>transform</code> nos permite ver essa nuance sem perder os dados individuais do paciente.<br>
+<br>
+</p>
+</section>
+<section class="slide level2">
+
+<p>Portanto, concluindo, a manipulação de dados com <code>DataFrames.jl</code> oferece um fluxo de trabalho claro e estatisticamente robusto. O método <code>groupby</code> organiza o caos inicial; o <code>combine</code> gera os indicadores chave de performance (KPIs) para a gestão; e o <code>transform</code> refina a análise, permitindo entender o indivíduo dentro do seu contexto coletivo. Ao aplicar essas técnicas na base <code>patients</code>, transformamos dados brutos administrativos em conhecimento estratégico sobre a qualidade e eficiência hospitalar.<br>
+<br>
+</p>
+</section>
+<section id="julia-vs.-r-vs.-python-2" class="slide level2">
+<h2>Julia vs.&nbsp;R vs.&nbsp;Python</h2>
+<p>As três linguagens aplicam o paradigma <em>Split-Apply-Combine</em>, mas com filosofias distintas. O R (dplyr) possui uma abordagem Funcional com verbos de ação encadeados (<code>%&gt;%</code>). O Python (Pandas) adota uma abordagem Orientada a Objetos com métodos encadeados (<code>.</code>) em objetos de classe. Já Julia (DataFrames.jl) utiliza <em>Multiple Dispatch</em>, focando em performance pura e sintaxe consistente de pares (<code>:coluna =&gt; função</code>), operando frequentemente sobre ‘Views’ (visualizações) sem cópia de memória.</p>
+</section>
+<section class="slide level2">
+
+<p>Em agrupamento (group by), a diferença reside na visibilidade e alocação. O Python cria um objeto “Lazy” (preguiçoso); o <code>df.groupby()</code> retorna um objeto opaco (<code>DataFrameGroupBy</code>) que aguarda instrução e não é visualizável diretamente. O R adiciona metadados; o <code>group_by()</code> retorna a mesma tabela visualizável, apenas com uma “etiqueta” interna de grupo. Já Julia adota um meio-termo otimizado: o <code>groupby()</code> cria um <code>GroupedDataFrame</code>, que não copia os dados (é uma <em>view</em> eficiente), mas é um objeto distinto e iterável, permitindo inspeção direta sem a opacidade do Python nem a ambiguidade visual do R.</p>
+</section>
+<section class="slide level2">
+
+<p>Em sumarização (Summarize), a principal diferença consiste em gestão de índices e estrutura. Python (<code>.agg</code>) exige dicionários/tuplas e transforma a coluna de agrupamento em índice (<em>Index</em>), frequentemente exigindo um <code>.reset_index()</code> para voltar a ser tabela plana. Em R (<code>summarise</code>), a sintaxe é direta (<code>media = mean(x)</code>), retornando automaticamente um <em>tibble</em> padrão sem índices hierárquicos. Julia (<code>combine</code>) alinha-se ao R no resultado (retorna um DataFrame padrão, sem índices complexos), mas usa uma sintaxe de transformação explicita (<code>:col_origem =&gt; função =&gt; :col_destino</code>), o que garante maior clareza programática e facilidade em processamento paralelo.</p>
+</section>
+<section class="slide level2">
+
+<p>Por fim, em Transformação (Window Functions), a diferença é a explicitude versus contexto. Python (<code>.transform</code>) é rígido, separa estritamente agregação de transformação, sendo obrigatório mudar o método para realizar o <em>broadcasting</em>. R (<code>mutate</code>) possui fluidez total; o contexto define o comportamento e o mesmo verbo aplica a lógica de janela automaticamente se houver grupos. Julia (<code>transform</code>) equilibra os dois: utiliza um verbo específico (igual ao Python) para indicar que o número de linhas será mantido, mas mantém a sintaxe unificada de pares do <code>combine</code>, tornando a leitura do código mais previsível e consistente entre operações.</p>
+</section>
+<section class="slide level2">
+
+<p>Dessa forma, o R (dplyr) vence na velocidade de exploração e legibilidade humana. O Python (Pandas) vence na engenharia e integração com ecossistemas de produção e Machine Learning. No entanto, Julia (DataFrames.jl) vence na performance computacional e consistência. Ela resolve o ‘problema das duas linguagens’, oferecendo a expressividade de análise do R com a robustez e velocidade de execução superior ao C/Python, ideal para <em>Big Data</em> onde a eficiência de memória e tempo de processamento são críticos.</p>
+</section>
+<section id="reformatação" class="slide level2">
+<h2>4) Reformatação</h2>
+<ul>
+<li>Reformatação (pivoting): o primeiro trabalho que faremos será a transformação de dados do formato “longo” para o formato “largo”, ou seja quebrar colunas com muitas linhas de valores unicos em várias colunas.</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>Nesse caso, será utilizada a tabela staff_schedule.csv, onde podemos observar, principalmente, a coluna <em>week, staff_name e present,</em> que indicam a semana, o nome do funcionário do hospital e se ele estava presente naquela semana. Ou seja, para cada funcionário existem 52 linhas de semanas para indicar se ele estava ou não presente, o que faremos é criar uma coluna para cada funcionário, de modo que no final a tabela terá apenas 52 linhas, a quantidade total de semanas.</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb50-1"><a href=""></a> <span class="co"># Importando o banco</span></span>
+<span id="cb50-2"><a href=""></a><span class="im">using</span> <span class="bu">CSV</span></span>
+<span id="cb50-3"><a href=""></a><span class="im">using</span> <span class="bu">DataFrames</span></span>
+<span id="cb50-4"><a href=""></a></span>
+<span id="cb50-5"><a href=""></a>df_funcionarios <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv"</span>, DataFrame)</span>
+<span id="cb50-6"><a href=""></a></span>
+<span id="cb50-7"><a href=""></a><span class="co"># Selecionando as variáveis necessárias</span></span>
+<span id="cb50-8"><a href=""></a>df_funcionarios <span class="op">=</span> <span class="fu">select</span>(df_funcionarios, <span class="op">:</span>week, <span class="op">:</span>staff_name, <span class="op">:</span>present)</span>
+<span id="cb50-9"><a href=""></a></span>
+<span id="cb50-10"><a href=""></a><span class="co"># Pivotando os dados (unstack)</span></span>
+<span id="cb50-11"><a href=""></a></span>
+<span id="cb50-12"><a href=""></a><span class="co">#linhas = semanas (1 a 52)</span></span>
+<span id="cb50-13"><a href=""></a><span class="co">#colunas = nomes únicos dos funcionarios</span></span>
+<span id="cb50-14"><a href=""></a><span class="co">#valores = presença (0 ou 1)</span></span>
+<span id="cb50-15"><a href=""></a></span>
+<span id="cb50-16"><a href=""></a>df_funcionarios_pivot <span class="op">=</span> <span class="fu">unstack</span>(df_funcionarios, <span class="op">:</span>week, <span class="op">:</span>staff_name, <span class="op">:</span>present)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb51-1"><a href=""></a><span class="fu">first</span>(df_funcionarios_pivot, <span class="fl">6</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>6×127 DataFrame
+ Row │ week   Allison Hill  Noah Rhodes  Angie Henderson  Daniel Wagner  Crist ⋯
+     │ Int64  Int64?        Int64?       Int64?           Int64?         Int64 ⋯
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │     1             1            1                1              1        ⋯
+   2 │     2             1            1                1              1
+   3 │     3             0            0                0              0
+   4 │     4             1            1                0              1
+   5 │     5             1            1                1              1        ⋯
+   6 │     6             0            0                0              0
+                                                             122 columns omitted</code></pre>
+</div>
+</div>
+</section>
+<section id="julia-vs.-r-vs.-python-3" class="slide level2">
+<h2>Julia vs.&nbsp;R vs.&nbsp;Python</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href=""></a><span class="co"># Em R</span></span>
+<span id="cb53-2"><a href=""></a></span>
+<span id="cb53-3"><a href=""></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb53-4"><a href=""></a></span>
+<span id="cb53-5"><a href=""></a><span class="co"># importar CSV</span></span>
+<span id="cb53-6"><a href=""></a>df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv"</span>)</span>
+<span id="cb53-7"><a href=""></a></span>
+<span id="cb53-8"><a href=""></a><span class="co"># Mantendo apenas as colunas necessárias</span></span>
+<span id="cb53-9"><a href=""></a>df_small <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
+<span id="cb53-10"><a href=""></a><span class="fu">select</span>(week, staff_name, present)</span>
+<span id="cb53-11"><a href=""></a></span>
+<span id="cb53-12"><a href=""></a><span class="co"># Pivotando (cada staff vira coluna)</span></span>
+<span id="cb53-13"><a href=""></a>df_wide <span class="ot">&lt;-</span> df_small <span class="sc">%&gt;%</span></span>
+<span id="cb53-14"><a href=""></a>   <span class="fu">pivot_wider</span>(</span>
+<span id="cb53-15"><a href=""></a>     <span class="at">names_from =</span> staff_name,</span>
+<span id="cb53-16"><a href=""></a>     <span class="at">values_from =</span> present</span>
+<span id="cb53-17"><a href=""></a>   ) <span class="sc">%&gt;%</span></span>
+<span id="cb53-18"><a href=""></a>   <span class="fu">arrange</span>(week)</span>
+<span id="cb53-19"><a href=""></a></span>
+<span id="cb53-20"><a href=""></a> <span class="fu">print</span>(df_wide)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 52 × 127
+    week `Allison Hill` `Noah Rhodes` `Angie Henderson` `Daniel Wagner`
+   &lt;dbl&gt;          &lt;dbl&gt;         &lt;dbl&gt;             &lt;dbl&gt;           &lt;dbl&gt;
+ 1     1              1             1                 1               1
+ 2     2              1             1                 1               1
+ 3     3              0             0                 0               0
+ 4     4              1             1                 0               1
+ 5     5              1             1                 1               1
+ 6     6              0             0                 0               0
+ 7     7              1             1                 0               1
+ 8     8              1             1                 1               1
+ 9     9              0             0                 0               0
+10    10              1             1                 0               1
+# ℹ 42 more rows
+# ℹ 122 more variables: `Cristian Santos` &lt;dbl&gt;, `Connie Lawrence` &lt;dbl&gt;,
+#   `Abigail Shaffer` &lt;dbl&gt;, `Gina Moore` &lt;dbl&gt;, `Gabrielle Davis` &lt;dbl&gt;,
+#   `Ryan Munoz` &lt;dbl&gt;, `Monica Herrera` &lt;dbl&gt;, `Jamie Arnold` &lt;dbl&gt;,
+#   `Lisa Hensley` &lt;dbl&gt;, `Michele Williams` &lt;dbl&gt;, `Dylan Miller` &lt;dbl&gt;,
+#   `Brian Ramirez` &lt;dbl&gt;, `Holly Wood` &lt;dbl&gt;, `Derek Zuniga` &lt;dbl&gt;,
+#   `Lisa Jackson` &lt;dbl&gt;, `Carla Gray` &lt;dbl&gt;, `Margaret Hawkins DDS` &lt;dbl&gt;, …</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href=""></a><span class="co"># Em python</span></span>
+<span id="cb55-2"><a href=""></a></span>
+<span id="cb55-3"><a href=""></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb55-4"><a href=""></a></span>
+<span id="cb55-5"><a href=""></a><span class="co"># importar CSV</span></span>
+<span id="cb55-6"><a href=""></a>df <span class="op">=</span> pd.read_csv(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv"</span>)</span>
+<span id="cb55-7"><a href=""></a></span>
+<span id="cb55-8"><a href=""></a><span class="co"># manter apenas week, staff_name, present</span></span>
+<span id="cb55-9"><a href=""></a>df_small <span class="op">=</span> df[[<span class="st">"week"</span>, <span class="st">"staff_name"</span>, <span class="st">"present"</span>]]</span>
+<span id="cb55-10"><a href=""></a></span>
+<span id="cb55-11"><a href=""></a><span class="co"># pivotar</span></span>
+<span id="cb55-12"><a href=""></a>df_wide <span class="op">=</span> df_small.pivot_table(</span>
+<span id="cb55-13"><a href=""></a>    index<span class="op">=</span><span class="st">"week"</span>,</span>
+<span id="cb55-14"><a href=""></a>    columns<span class="op">=</span><span class="st">"staff_name"</span>,</span>
+<span id="cb55-15"><a href=""></a>    values<span class="op">=</span><span class="st">"present"</span>,</span>
+<span id="cb55-16"><a href=""></a>    aggfunc<span class="op">=</span><span class="st">"first"</span>   <span class="co"># assume 1 valor por semana por funcionário</span></span>
+<span id="cb55-17"><a href=""></a>).reset_index()</span>
+<span id="cb55-18"><a href=""></a></span>
+<span id="cb55-19"><a href=""></a><span class="co"># garantir ordenação</span></span>
+<span id="cb55-20"><a href=""></a>df_wide <span class="op">=</span> df_wide.sort_values(<span class="st">"week"</span>)</span>
+<span id="cb55-21"><a href=""></a></span>
+<span id="cb55-22"><a href=""></a><span class="bu">print</span>(df_wide)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>staff_name  week  Aaron Wise  ...  Zachary Ferrell  Zachary Hicks
+0              1           1  ...                1              1
+1              2           1  ...                1              1
+2              3           0  ...                0              0
+3              4           1  ...                1              1
+4              5           1  ...                1              1
+5              6           0  ...                0              0
+6              7           1  ...                1              1
+7              8           1  ...                1              1
+8              9           0  ...                0              0
+9             10           1  ...                1              1
+10            11           1  ...                0              1
+11            12           0  ...                0              0
+12            13           1  ...                1              1
+13            14           0  ...                1              1
+14            15           0  ...                0              0
+15            16           0  ...                1              1
+16            17           1  ...                1              1
+17            18           0  ...                0              0
+18            19           1  ...                1              0
+19            20           0  ...                1              1
+20            21           0  ...                0              0
+21            22           1  ...                1              1
+22            23           1  ...                1              1
+23            24           0  ...                0              0
+24            25           1  ...                1              1
+25            26           1  ...                1              1
+26            27           0  ...                0              0
+27            28           1  ...                1              1
+28            29           1  ...                1              1
+29            30           0  ...                0              0
+30            31           1  ...                1              1
+31            32           1  ...                0              1
+32            33           0  ...                0              0
+33            34           1  ...                1              1
+34            35           1  ...                1              0
+35            36           0  ...                0              0
+36            37           1  ...                0              1
+37            38           1  ...                1              1
+38            39           0  ...                0              0
+39            40           1  ...                1              1
+40            41           1  ...                1              1
+41            42           0  ...                0              0
+42            43           1  ...                1              1
+43            44           1  ...                1              1
+44            45           0  ...                0              0
+45            46           1  ...                1              1
+46            47           0  ...                1              1
+47            48           0  ...                0              0
+48            49           1  ...                1              1
+49            50           1  ...                0              1
+50            51           0  ...                0              0
+51            52           1  ...                1              1
+
+[52 rows x 127 columns]</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>Em Julia e R é muito mais prático realizar o pivotamento em comparação com Python, entre Julia e R via R ainda demanda um pouco mais de argumentos. Em questão de tempo, como o banco é bem pequeno, a diferença é irrelevante</li>
+</ul>
+</section>
+<section id="combinação" class="slide level2">
+<h2>5) Combinação</h2>
+<ul>
+<li>Join: o próximo trabalho será realizar a junção de diferentes tabelas através de uma variável em comum. Nesse caso, iremos juntar a tabela pivotada que criamos anteriormente com a tabela services_weekly.csv, que contém dados semanais (semana 1 a 52 também) dos serviços prestados pelo hospital. Para isso primeiro vamos pivotar também a tabela para ficar com a coluna de semana igual e realizar o join a partir dela a fim de, por exemplo, verificar se a nota de satisfação relativa ao trabalho dos funcionários tem relação com a quantidade de funcionários presentes:</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb57-1"><a href=""></a><span class="co"># Importando o banco e selecionando as variaveis de interesse</span></span>
+<span id="cb57-2"><a href=""></a><span class="im">using</span> <span class="bu">CSV</span></span>
+<span id="cb57-3"><a href=""></a> <span class="im">using</span> <span class="bu">DataFrames</span></span>
+<span id="cb57-4"><a href=""></a></span>
+<span id="cb57-5"><a href=""></a> df_servicos <span class="op">=</span> CSV.<span class="fu">read</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/services_weekly.csv"</span>, DataFrame)</span>
+<span id="cb57-6"><a href=""></a>df_servicos <span class="op">=</span> <span class="fu">select</span>(df_servicos, <span class="fu">Not</span>([<span class="op">:</span>month, <span class="op">:</span>service, <span class="op">:</span>event]))</span>
+<span id="cb57-7"><a href=""></a></span>
+<span id="cb57-8"><a href=""></a><span class="co"># Pivotando os dados</span></span>
+<span id="cb57-9"><a href=""></a><span class="im">using</span> <span class="bu">Statistics</span></span>
+<span id="cb57-10"><a href=""></a></span>
+<span id="cb57-11"><a href=""></a>df_servicos_pivot <span class="op">=</span> <span class="fu">combine</span>(<span class="fu">groupby</span>(df_servicos, <span class="op">:</span>week), </span>
+<span id="cb57-12"><a href=""></a>    <span class="op">:</span>available_beds <span class="op">=&gt;</span> sum,</span>
+<span id="cb57-13"><a href=""></a>    <span class="op">:</span>patients_request <span class="op">=&gt;</span> sum,</span>
+<span id="cb57-14"><a href=""></a>    <span class="op">:</span>patients_admitted <span class="op">=&gt;</span> sum,</span>
+<span id="cb57-15"><a href=""></a>    <span class="op">:</span>patients_refused <span class="op">=&gt;</span> sum,</span>
+<span id="cb57-16"><a href=""></a>    <span class="op">:</span>patient_satisfaction <span class="op">=&gt;</span> mean,</span>
+<span id="cb57-17"><a href=""></a>     <span class="op">:</span>staff_morale <span class="op">=&gt;</span> mean</span>
+<span id="cb57-18"><a href=""></a>)</span>
+<span id="cb57-19"><a href=""></a></span>
+<span id="cb57-20"><a href=""></a><span class="co"># Modificando a tabela anterior para mostrar apenas a quantidade de funcionarios presentes por semana</span></span>
+<span id="cb57-21"><a href=""></a>df_presenca_semanal <span class="op">=</span> <span class="fu">combine</span>(<span class="fu">groupby</span>(df_funcionarios, <span class="op">:</span>week),</span>
+<span id="cb57-22"><a href=""></a>                                 <span class="op">:</span>present <span class="op">=&gt;</span> sum <span class="op">=&gt;</span> <span class="op">:</span>funcionarios_presentes)</span>
+<span id="cb57-23"><a href=""></a></span>
+<span id="cb57-24"><a href=""></a><span class="co"># Juntando as tabelas</span></span>
+<span id="cb57-25"><a href=""></a></span>
+<span id="cb57-26"><a href=""></a>df_join <span class="op">=</span> <span class="fu">innerjoin</span>(df_presenca_semanal, df_servicos_pivot, on <span class="op">=</span> <span class="op">:</span>week)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb58-1"><a href=""></a><span class="fu">println</span>(df_join)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>52×8 DataFrame
+ Row │ week   funcionarios_presentes  available_beds_sum  patients_request_sum  patients_admitted_sum  patients_refused_sum  patient_satisfaction_mean  staff_morale_mean
+     │ Int64  Int64                   Int64               Int64                 Int64                  Int64                 Float64                    Float64
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │     1                     116                 136                   438                    136                   302                      82.75              70.5
+   2 │     2                     115                 127                   385                    104                   281                      80.75              74.5
+   3 │     3                       0                 116                   322                    116                   206                      78.25              70.5
+   4 │     4                     107                 151                   387                    151                   236                      72.0               80.0
+   5 │     5                     108                 113                   574                    104                   470                      80.0               73.75
+   6 │     6                       0                 144                   358                    142                   216                      81.75              72.25
+   7 │     7                     115                 153                   300                    153                   147                      77.5               79.5
+   8 │     8                     109                 147                   375                    114                   261                      83.5               80.5
+   9 │     9                       0                  99                   252                     99                   153                      75.75              78.0
+  10 │    10                     112                 103                   259                     98                   161                      83.75              59.75
+  11 │    11                     110                 113                   212                    113                    99                      79.0               69.25
+  12 │    12                       0                 115                   453                     98                   355                      74.0               87.0
+  13 │    13                     107                 114                   280                    109                   171                      72.75              76.75
+  14 │    14                     104                 109                   209                    105                   104                      86.5               72.0
+  15 │    15                       0                 115                   367                    112                   255                      85.25              75.5
+  16 │    16                     113                 117                   228                    105                   123                      81.75              66.0
+  17 │    17                     110                 108                   249                     91                   158                      85.25              78.25
+  18 │    18                       0                 104                   170                     88                    82                      80.25              73.75
+  19 │    19                     118                 115                   191                    115                    76                      82.5               64.5
+  20 │    20                     115                 102                   168                    102                    66                      85.25              77.75
+  21 │    21                       0                 105                   218                    102                   116                      79.0               66.5
+  22 │    22                     115                  89                   192                     76                   116                      77.75              75.75
+  23 │    23                     117                  92                   190                     87                   103                      78.25              67.75
+  24 │    24                       0                 113                   201                     95                   106                      87.5               71.75
+  25 │    25                     111                  81                   144                     79                    65                      75.0               80.5
+  26 │    26                     119                 106                   206                     99                   107                      85.0               66.25
+  27 │    27                       0                  95                   162                     85                    77                      75.5               70.75
+  28 │    28                     116                  84                   141                     77                    64                      80.0               66.75
+  29 │    29                     115                  96                   200                     91                   109                      75.75              72.5
+  30 │    30                       0                  94                   154                     76                    78                      75.0               80.25
+  31 │    31                     108                  93                   144                     93                    51                      81.0               77.5
+  32 │    32                     111                  96                   188                     90                    98                      78.0               68.25
+  33 │    33                       0                 126                   195                    120                    75                      88.0               69.75
+  34 │    34                     112                 101                   136                     98                    38                      78.0               65.5
+  35 │    35                     109                 100                   171                     86                    85                      83.0               68.0
+  36 │    36                       0                 149                   227                    134                    93                      84.0               83.5
+  37 │    37                     111                 125                   217                    115                   102                      80.0               60.0
+  38 │    38                     116                 152                   215                    150                    65                      72.0               68.5
+  39 │    39                       0                 115                   190                    115                    75                      88.75              68.75
+  40 │    40                     110                 123                   215                    113                   102                      81.75              57.5
+  41 │    41                     118                 129                   231                    128                   103                      78.75              82.5
+  42 │    42                       0                 152                   292                    148                   144                      69.25              76.25
+  43 │    43                     112                 131                   265                    108                   157                      75.0               83.0
+  44 │    44                     112                 141                   252                    124                   128                      76.0               72.75
+  45 │    45                       0                 122                   339                    122                   217                      76.25              67.25
+  46 │    46                     109                 152                   283                    127                   156                      75.5               77.25
+  47 │    47                     112                 147                   247                    138                   109                      83.75              68.75
+  48 │    48                       0                 133                   325                    116                   209                      84.0               78.25
+  49 │    49                     118                 140                   251                    131                   120                      87.0               72.0
+  50 │    50                     112                 177                   236                    153                    83                      75.5               65.75
+  51 │    51                       0                 186                   471                    168                   303                      84.25              81.5
+  52 │    52                     108                 166                   418                    152                   266                      83.0               62.25</code></pre>
+</div>
+</div>
+</section>
+<section id="julia-vs.-r-vs.-python-4" class="slide level2">
+<h2>Julia vs.&nbsp;R vs.&nbsp;Python</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href=""></a><span class="co"># Em R</span></span>
+<span id="cb60-2"><a href=""></a></span>
+<span id="cb60-3"><a href=""></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb60-4"><a href=""></a><span class="fu">library</span>(readr)</span>
+<span id="cb60-5"><a href=""></a></span>
+<span id="cb60-6"><a href=""></a><span class="co"># Somando presenças por semana</span></span>
+<span id="cb60-7"><a href=""></a>df_funcionarios_semanal <span class="ot">&lt;-</span> df_small <span class="sc">%&gt;%</span></span>
+<span id="cb60-8"><a href=""></a>  <span class="fu">group_by</span>(week) <span class="sc">%&gt;%</span></span>
+<span id="cb60-9"><a href=""></a>  <span class="fu">summarise</span>(<span class="at">funcionarios_presentes =</span> <span class="fu">sum</span>(present, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb60-10"><a href=""></a></span>
+<span id="cb60-11"><a href=""></a><span class="co"># Importando e pivotando a segunda tabela</span></span>
+<span id="cb60-12"><a href=""></a>df_servicos <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/services_weekly.csv"</span>)</span>
+<span id="cb60-13"><a href=""></a></span>
+<span id="cb60-14"><a href=""></a>df_servicos_pivot <span class="ot">&lt;-</span> df_servicos <span class="sc">%&gt;%</span></span>
+<span id="cb60-15"><a href=""></a>  <span class="fu">select</span>(<span class="sc">-</span>month, <span class="sc">-</span>service, <span class="sc">-</span>event) <span class="sc">%&gt;%</span>  <span class="co"># remover colunas</span></span>
+<span id="cb60-16"><a href=""></a>  <span class="fu">group_by</span>(week) <span class="sc">%&gt;%</span></span>
+<span id="cb60-17"><a href=""></a>  <span class="fu">summarise</span>(</span>
+<span id="cb60-18"><a href=""></a>    <span class="at">available_beds =</span> <span class="fu">sum</span>(available_beds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb60-19"><a href=""></a>    <span class="at">patients_request =</span> <span class="fu">sum</span>(patients_request, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb60-20"><a href=""></a>    <span class="at">patients_admitted =</span> <span class="fu">sum</span>(patients_admitted, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb60-21"><a href=""></a>    <span class="at">patients_refused =</span> <span class="fu">sum</span>(patients_refused, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb60-22"><a href=""></a>    <span class="at">patient_satisfaction =</span> <span class="fu">mean</span>(patient_satisfaction, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb60-23"><a href=""></a>    <span class="at">staff_morale =</span> <span class="fu">mean</span>(staff_morale, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb60-24"><a href=""></a>  )</span>
+<span id="cb60-25"><a href=""></a></span>
+<span id="cb60-26"><a href=""></a><span class="co"># Juntando as tabelas</span></span>
+<span id="cb60-27"><a href=""></a>df_join <span class="ot">&lt;-</span> df_funcionarios_semanal <span class="sc">%&gt;%</span></span>
+<span id="cb60-28"><a href=""></a>  <span class="fu">inner_join</span>(df_servicos_pivot, <span class="at">by =</span> <span class="st">"week"</span>)</span>
+<span id="cb60-29"><a href=""></a></span>
+<span id="cb60-30"><a href=""></a>df_join</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 52 × 8
+    week funcionarios_presentes available_beds patients_request
+   &lt;dbl&gt;                  &lt;dbl&gt;          &lt;dbl&gt;            &lt;dbl&gt;
+ 1     1                    116            136              438
+ 2     2                    115            127              385
+ 3     3                      0            116              322
+ 4     4                    107            151              387
+ 5     5                    108            113              574
+ 6     6                      0            144              358
+ 7     7                    115            153              300
+ 8     8                    109            147              375
+ 9     9                      0             99              252
+10    10                    112            103              259
+# ℹ 42 more rows
+# ℹ 4 more variables: patients_admitted &lt;dbl&gt;, patients_refused &lt;dbl&gt;,
+#   patient_satisfaction &lt;dbl&gt;, staff_morale &lt;dbl&gt;</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href=""></a><span class="co"># Em Python</span></span>
+<span id="cb62-2"><a href=""></a></span>
+<span id="cb62-3"><a href=""></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb62-4"><a href=""></a></span>
+<span id="cb62-5"><a href=""></a><span class="co"># Somar presenças por semana</span></span>
+<span id="cb62-6"><a href=""></a>df_funcionarios <span class="op">=</span> pd.read_csv(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/staff_schedule.csv"</span>)</span>
+<span id="cb62-7"><a href=""></a></span>
+<span id="cb62-8"><a href=""></a>df_funcionarios_semanal <span class="op">=</span> (</span>
+<span id="cb62-9"><a href=""></a>    df_funcionarios</span>
+<span id="cb62-10"><a href=""></a>    .groupby(<span class="st">"week"</span>, as_index<span class="op">=</span><span class="va">False</span>)[<span class="st">"present"</span>]</span>
+<span id="cb62-11"><a href=""></a>    .<span class="bu">sum</span>()</span>
+<span id="cb62-12"><a href=""></a>    .rename(columns<span class="op">=</span>{<span class="st">"present"</span>: <span class="st">"funcionarios_presentes"</span>})</span>
+<span id="cb62-13"><a href=""></a>)</span>
+<span id="cb62-14"><a href=""></a></span>
+<span id="cb62-15"><a href=""></a><span class="co"># Importando e pivotando a segunda tabela</span></span>
+<span id="cb62-16"><a href=""></a></span>
+<span id="cb62-17"><a href=""></a>df_servicos <span class="op">=</span> pd.read_csv(<span class="st">"C:/Users/vinic/OneDrive/Documents/ME315/trabalhofinal/services_weekly.csv"</span>)</span>
+<span id="cb62-18"><a href=""></a>df_servicos <span class="op">=</span> df_servicos.drop(columns<span class="op">=</span>[<span class="st">"month"</span>, <span class="st">"service"</span>, <span class="st">"event"</span>])</span>
+<span id="cb62-19"><a href=""></a></span>
+<span id="cb62-20"><a href=""></a>df_servicos_pivot <span class="op">=</span> df_servicos.groupby(<span class="st">"week"</span>, as_index<span class="op">=</span><span class="va">False</span>).agg({</span>
+<span id="cb62-21"><a href=""></a>    <span class="st">"available_beds"</span>: <span class="st">"sum"</span>,</span>
+<span id="cb62-22"><a href=""></a>    <span class="st">"patients_request"</span>: <span class="st">"sum"</span>,</span>
+<span id="cb62-23"><a href=""></a>    <span class="st">"patients_admitted"</span>: <span class="st">"sum"</span>,</span>
+<span id="cb62-24"><a href=""></a>    <span class="st">"patients_refused"</span>: <span class="st">"sum"</span>,</span>
+<span id="cb62-25"><a href=""></a>    <span class="st">"patient_satisfaction"</span>: <span class="st">"mean"</span>,</span>
+<span id="cb62-26"><a href=""></a>    <span class="st">"staff_morale"</span>: <span class="st">"mean"</span></span>
+<span id="cb62-27"><a href=""></a>})</span>
+<span id="cb62-28"><a href=""></a></span>
+<span id="cb62-29"><a href=""></a><span class="co"># Jutando as tabelas</span></span>
+<span id="cb62-30"><a href=""></a></span>
+<span id="cb62-31"><a href=""></a>df_join <span class="op">=</span> df_funcionarios_semanal.merge(df_servicos_pivot, on<span class="op">=</span><span class="st">"week"</span>, how<span class="op">=</span><span class="st">"inner"</span>)</span>
+<span id="cb62-32"><a href=""></a></span>
+<span id="cb62-33"><a href=""></a><span class="bu">print</span>(df_join)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    week  funcionarios_presentes  ...  patient_satisfaction  staff_morale
+0      1                     116  ...                 82.75         70.50
+1      2                     115  ...                 80.75         74.50
+2      3                       0  ...                 78.25         70.50
+3      4                     107  ...                 72.00         80.00
+4      5                     108  ...                 80.00         73.75
+5      6                       0  ...                 81.75         72.25
+6      7                     115  ...                 77.50         79.50
+7      8                     109  ...                 83.50         80.50
+8      9                       0  ...                 75.75         78.00
+9     10                     112  ...                 83.75         59.75
+10    11                     110  ...                 79.00         69.25
+11    12                       0  ...                 74.00         87.00
+12    13                     107  ...                 72.75         76.75
+13    14                     104  ...                 86.50         72.00
+14    15                       0  ...                 85.25         75.50
+15    16                     113  ...                 81.75         66.00
+16    17                     110  ...                 85.25         78.25
+17    18                       0  ...                 80.25         73.75
+18    19                     118  ...                 82.50         64.50
+19    20                     115  ...                 85.25         77.75
+20    21                       0  ...                 79.00         66.50
+21    22                     115  ...                 77.75         75.75
+22    23                     117  ...                 78.25         67.75
+23    24                       0  ...                 87.50         71.75
+24    25                     111  ...                 75.00         80.50
+25    26                     119  ...                 85.00         66.25
+26    27                       0  ...                 75.50         70.75
+27    28                     116  ...                 80.00         66.75
+28    29                     115  ...                 75.75         72.50
+29    30                       0  ...                 75.00         80.25
+30    31                     108  ...                 81.00         77.50
+31    32                     111  ...                 78.00         68.25
+32    33                       0  ...                 88.00         69.75
+33    34                     112  ...                 78.00         65.50
+34    35                     109  ...                 83.00         68.00
+35    36                       0  ...                 84.00         83.50
+36    37                     111  ...                 80.00         60.00
+37    38                     116  ...                 72.00         68.50
+38    39                       0  ...                 88.75         68.75
+39    40                     110  ...                 81.75         57.50
+40    41                     118  ...                 78.75         82.50
+41    42                       0  ...                 69.25         76.25
+42    43                     112  ...                 75.00         83.00
+43    44                     112  ...                 76.00         72.75
+44    45                       0  ...                 76.25         67.25
+45    46                     109  ...                 75.50         77.25
+46    47                     112  ...                 83.75         68.75
+47    48                       0  ...                 84.00         78.25
+48    49                     118  ...                 87.00         72.00
+49    50                     112  ...                 75.50         65.75
+50    51                       0  ...                 84.25         81.50
+51    52                     108  ...                 83.00         62.25
+
+[52 rows x 8 columns]</code></pre>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>Em termos de facilidade apenas da funcção de juntar as tabelas as 3 linguagens se mostraram bem parecidas, com uma mínima quantidade a mais de caracteres na argumentação das funções de join. Porém, pela linguagem Julia ainda conseguimos realizar o processo com menos linhas e caracteres de código comparado a R e Python.</li>
+</ul>
+
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="manipulacaodedadosemjulia_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+
+    <script>
+
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+
+      // slide changes (different for each slide format).
+
+      (function () {
+
+        // dispatch for htmlwidgets
+
+        function fireSlideEnter() {
+
+          const event = window.document.createEvent("Event");
+
+          event.initEvent("slideenter", true, true);
+
+          window.document.dispatchEvent(event);
+
+        }
+
+    
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+
+          fireSlideEnter();
+
+    
+
+          // dispatch for shiny
+
+          if (window.jQuery) {
+
+            if (previousSlide) {
+
+              window.jQuery(previousSlide).trigger("hidden");
+
+            }
+
+            if (currentSlide) {
+
+              window.jQuery(currentSlide).trigger("shown");
+
+            }
+
+          }
+
+        }
+
+    
+
+        // hookup for slidy
+
+        if (window.w3c_slidy) {
+
+          window.w3c_slidy.add_observer(function (slide_num) {
+
+            // slide_num starts at position 1
+
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+
+          });
+
+        }
+
+    
+
+      })();
+
+    </script>
+
+    
+
+    <script id="quarto-html-after-body" type="application/javascript">
+    window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
+      }
+      toggleBodyColorPrimary();  
+      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+      tabsets.forEach(function(tabset) {
+        const tabby = new Tabby('#' + tabset.id);
+      });
+      const isCodeAnnotation = (el) => {
+        for (const clz of el.classList) {
+          if (clz.startsWith('code-annotation-')) {                     
+            return true;
+          }
+        }
+        return false;
+      }
+      const onCopySuccess = function(e) {
+        // button target
+        const button = e.trigger;
+        // don't keep focus
+        button.blur();
+        // flash "checked"
+        button.classList.add('code-copy-button-checked');
+        var currentTitle = button.getAttribute("title");
+        button.setAttribute("title", "Copied!");
+        let tooltip;
+        if (window.bootstrap) {
+          button.setAttribute("data-bs-toggle", "tooltip");
+          button.setAttribute("data-bs-placement", "left");
+          button.setAttribute("data-bs-title", "Copied!");
+          tooltip = new bootstrap.Tooltip(button, 
+            { trigger: "manual", 
+              customClass: "code-copy-button-tooltip",
+              offset: [0, -8]});
+          tooltip.show();    
+        }
+        setTimeout(function() {
+          if (tooltip) {
+            tooltip.hide();
+            button.removeAttribute("data-bs-title");
+            button.removeAttribute("data-bs-toggle");
+            button.removeAttribute("data-bs-placement");
+          }
+          button.setAttribute("title", currentTitle);
+          button.classList.remove('code-copy-button-checked');
+        }, 1000);
+        // clear code selection
+        e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
+      });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp('/' + window.location.host + '/');
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
+      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+        const config = {
+          allowHTML: true,
+          maxWidth: 500,
+          delay: 100,
+          arrow: false,
+          appendTo: function(el) {
+              return el.closest('section.slide') || el.parentElement;
+          },
+          interactive: true,
+          interactiveBorder: 10,
+          theme: 'light-border',
+          placement: 'bottom-start',
+        };
+        if (contentFn) {
+          config.content = contentFn;
+        }
+        if (onTriggerFn) {
+          config.onTrigger = onTriggerFn;
+        }
+        if (onUntriggerFn) {
+          config.onUntrigger = onUntriggerFn;
+        }
+          config['offset'] = [0,0];
+          config['maxWidth'] = 700;
+        window.tippy(el, config); 
+      }
+      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+      for (var i=0; i<noterefs.length; i++) {
+        const ref = noterefs[i];
+        tippyHover(ref, function() {
+          // use id or data attribute instead here
+          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+          try { href = new URL(href).hash; } catch {}
+          const id = href.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
+        });
+      }
+      const findCites = (el) => {
+        const parentEl = el.parentElement;
+        if (parentEl) {
+          const cites = parentEl.dataset.cites;
+          if (cites) {
+            return {
+              el,
+              cites: cites.split(' ')
+            };
+          } else {
+            return findCites(el.parentElement)
+          }
+        } else {
+          return undefined;
+        }
+      };
+      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+      for (var i=0; i<bibliorefs.length; i++) {
+        const ref = bibliorefs[i];
+        const citeInfo = findCites(ref);
+        if (citeInfo) {
+          tippyHover(citeInfo.el, function() {
+            var popup = window.document.createElement('div');
+            citeInfo.cites.forEach(function(cite) {
+              var citeDiv = window.document.createElement('div');
+              citeDiv.classList.add('hanging-indent');
+              citeDiv.classList.add('csl-entry');
+              var biblioDiv = window.document.getElementById('ref-' + cite);
+              if (biblioDiv) {
+                citeDiv.innerHTML = biblioDiv.innerHTML;
+              }
+              popup.appendChild(citeDiv);
+            });
+            return popup.innerHTML;
+          });
+        }
+      }
+    });
+    </script>
+    
+
+</body></html>
